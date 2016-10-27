@@ -26,7 +26,7 @@
 
                     scope.fillMessage = function (message) {
                         scope.quoteOption.message = message;
-                        element.find('[contenteditable]').html(scope.quoteOption.message.content);
+                        element.find('[contenteditable]').html(instance.compile(scope.quoteOption.message.content)(scope));
                     };
 
                     scope.addQuote = function () {
@@ -34,7 +34,7 @@
                         quote.html(element.find('[contenteditable]').html());
                         var footer = $('<footer>- ' + scope.quoteOption.message.authorName + '</footer>');
                         footer.appendTo(quote);
-                        instance.selection.replaceHTML(quote[0].outerHTML + '<div><br/></div>');
+                        instance.selection.replaceHTML(instance.compile(quote[0].outerHTML + '<div><br/></div>')(scope));
                         scope.quoteOption.display.enterQuote = false;
                     };
                 }
