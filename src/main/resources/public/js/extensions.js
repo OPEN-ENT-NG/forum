@@ -34,7 +34,12 @@
                         quote.html(element.find('[contenteditable]').html());
                         var footer = $('<footer>- ' + scope.quoteOption.message.authorName + '</footer>');
                         footer.appendTo(quote);
-                        instance.selection.replaceHTML(instance.compile(quote[0].outerHTML + '<div><br/></div>')(scope));
+                        var htmlContent = instance.compile(quote[0].outerHTML + '<div><br/></div>')(scope);
+                        var text = '';
+                        for(var i = 0; i < htmlContent.length; i++){
+                            text += htmlContent[i].outerHTML;
+                        }
+                        instance.selection.replaceHTML(text);
                         scope.quoteOption.display.enterQuote = false;
                     };
                 }
