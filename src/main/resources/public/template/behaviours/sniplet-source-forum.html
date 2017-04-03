@@ -1,36 +1,42 @@
-<div class="row accordions">
-	<article class="accordion" ng-class="{ opened: !existingForum }">
-		<h2 ng-click="existingForum = false;"><i18n>forum.sniplet.source.new</i18n></h2>
-		<div class="toggle">
-			<div class="content">
-				<p class="info">
-					<i18n>forum.sniplet.source.new.description</i18n>
-				</p>
-				<div class="row">
-					<input type="button" i18n-value="forum.sniplet.source.create" ng-click="autoCreateSnipletCategory()" class="cell right-magnet" />
-				</div>
-			</div>
-		</div>
-	</article>
-	<article class="accordion" ng-class="{ opened: existingForum }">
-		<h2 ng-click="existingForum = true;"><i18n>forum.sniplet.source.existing</i18n></h2>
-		<div class="toggle">
-			<div class="content">
-				<div class="row">
-					<input type="search" ng-model="searchCategory.searchText" />
-				</div>
-				<div class="row">
-				    <article>
-				        <ul class="illustrated-list">
-				            <li ng-repeat="c in categories | filter:search" ng-click="setSnipletSource(c); snipletResource.synchronizeRights();">
-				            	<img skin-src="[[c.icon]]" class="illustration" />
-				                <a class="name">[[c.name]]</a>
-				                <em class="owner">[[c.owner.name]]</em>
-				            </li>
-				        </ul>
-				    </article>
-				</div>
-			</div>
-		</div>
-	</article>
+<div class="open-source">
+	<button ng-click="showPickForum = true"><i18n>sniplet.add.forum</i18n></button>
 </div>
+
+<lightbox show="showPickForum">
+	<div class="row accordions">
+		<article class="accordion" ng-class="{ opened: !existingForum }">
+			<h2 ng-click="existingForum = false;"><i18n>forum.sniplet.source.new</i18n></h2>
+			<div class="toggle">
+				<div class="content">
+					<p class="info">
+						<i18n>forum.sniplet.source.new.description</i18n>
+					</p>
+					<div class="row">
+						<input type="button" i18n-value="forum.sniplet.source.create" ng-click="autoCreateSnipletCategory()" class="cell right-magnet" />
+					</div>
+				</div>
+			</div>
+		</article>
+		<article class="accordion" ng-class="{ opened: existingForum }">
+			<h2 ng-click="existingForum = true;"><i18n>forum.sniplet.source.existing</i18n></h2>
+			<div class="toggle">
+				<div class="content">
+					<div class="row">
+						<input type="search" ng-model="searchCategory.searchText" />
+					</div>
+					<div class="row">
+						<article>
+							<ul class="illustrated-list">
+								<li ng-repeat="c in categories | filter:search" ng-click="setSnipletSource(c); snipletResource.synchronizeRights();">
+									<img skin-src="[[c.icon]]" class="illustration" />
+									<a class="name">[[c.name]]</a>
+									<em class="owner">[[c.owner.name]]</em>
+								</li>
+							</ul>
+						</article>
+					</div>
+				</div>
+			</div>
+		</article>
+	</div>
+</lightbox>
