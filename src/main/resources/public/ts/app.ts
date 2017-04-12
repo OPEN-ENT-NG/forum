@@ -1,13 +1,31 @@
-model.build = function () {
-    window.forumModel = Behaviours.applicationsBehaviours.forum.namespace;
+import {routes, ng, model, notify, http, BaseModel, Collection, Behaviours} from 'entcore/entcore'
+import { forumExtensions } from './extensions';
+import { forumController } from './controller'
 
+routes.define(function($routeProvider){
+    $routeProvider
+        .when('/view/:categoryId', {
+            action: 'goToCategory'
+        })
+        .when('/view/:categoryId/:subjectId', {
+            action: 'goToSubject'
+        })
+        .otherwise({
+            action: 'mainPage'
+        });
+});
+
+// TODO: Legacy implementation to migrate to toolkit style 
+model.build = function () {
+	console.log("builllld");
+    var forumModel = Behaviours.applicationsBehaviours.forum.namespace;
 	this.makeModels([
 		forumModel.Category,
 		forumModel.Subject,
 		forumModel.Message
 	]);
 
-	window.ForumExtensions.extendEditor();
+	forumExtensions.extendEditor()
 
 	// Category prototype
 	Behaviours.applicationsBehaviours.forum.namespace.Category.prototype.open = function(cb){
@@ -34,7 +52,7 @@ model.build = function () {
 		}
 		else{
 			this.createCategory(function(){
-				model.categories.sync();
+				(model as any).categories.sync();
 				if (typeof callback === 'function') {
 					callback();
 				}
@@ -68,7 +86,7 @@ model.build = function () {
 				http().delete('/forum/category/' + item._id).done(function(){
 					counter = counter - 1;
 					if (counter === 0) {
-						model.categories.sync();
+						(model as any).categories.sync();
 						if(typeof callback === 'function'){
 							callback();
 						}
@@ -79,3 +97,6 @@ model.build = function () {
 		behaviours: 'forum'
 	})
 };
+
+
+ng.controllers.push(forumController);

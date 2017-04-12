@@ -1,4 +1,7 @@
-﻿window.ForumExtensions = {
+﻿import {RTE } from 'entcore/entcore';
+import { $ } from 'entcore/libs/jquery/jquery';
+
+export let forumExtensions = {
     extendEditor: function () {
         RTE.baseToolbarConf.option('quote', function (instance) {
             return {

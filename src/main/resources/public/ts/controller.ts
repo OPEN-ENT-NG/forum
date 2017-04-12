@@ -1,27 +1,21 @@
-routes.define(function($routeProvider){
-    $routeProvider
-      .when('/view/:categoryId', {
-        action: 'goToCategory'
-      })
-      .when('/view/:categoryId/:subjectId', {
-        action: 'goToSubject'
-      })
-	  .otherwise({
-        action: 'mainPage'
-      });
-});
+import {routes, model, Behaviours, ng, template } from 'entcore/entcore';
+import { moment } from 'entcore/libs/moment/moment';
+import { $ } from 'entcore/libs/jquery/jquery';
+import { _ } from 'entcore/libs/underscore/underscore'
 
-function ForumController($scope, template, model, date, route){
+export let forumController = ng.controller('ForumController', ['$scope', 'model', 'route',
+	function ($scope, model, route){
+	let Message = Behaviours.applicationsBehaviours.forum.namespace.Message
 	$scope.notFound = false;
 
 	$scope.template = template;
 
 	$scope.me = model.me;
 	$scope.categories = model.categories;
-	$scope.date = date;
+	$scope.date = moment();
 
 	$scope.display = {};
-	$scope.editedMessage = new forumModel.Message();
+	$scope.editedMessage = new Message();
 
     $scope.maxSubjects = 3
 
@@ -370,32 +364,33 @@ function ForumController($scope, template, model, date, route){
     };
 
 	$scope.lockSelection = function(){
-		selectedSubjects.forEach(function(subject){
+		$scope.getSelectedSubjects().forEach(function(subject){
 			subject.locked = true;
 			subject.save();
 		});
 	};
 
 	$scope.unlockSelection = function(){
-		selectedSubjects.forEach(function(subject){
+		$scope.getSelectedSubjects().forEach(function(subject){
 			subject.locked = false;
 			subject.save();
 		});
 	};
 
-	var selectedSubjects = [];
-    $scope.getSelectedSubjects = function(filter){
-        var sel = [].concat.apply([], $scope.categories.map(function(cat){
+	$scope.containsLockedSubjects = function () {
+		return $scope.selectedSubjects.find(subject => subject.locked) !== undefined;
+	};
+	$scope.isLockedSubjects = function () {
+        return $scope.selectedSubjects.find(subject => subject.locked !== true) === undefined;
+    };
+
+	$scope.selectedSubjects = [];
+    $scope.getSelectedSubjects = function(){
+        $scope.selectedSubjects = [].concat.apply([], $scope.categories.map(function(cat){
             return cat.subjects.filter(function(filter){
                 return filter.selected;
             });
         }));
-		if(sel.length !== selectedSubjects.length){
-			selectedSubjects = sel;
-		}
-		if(typeof filter === 'object'){
-			selectedSubjects = _.where(selectedSubjects, filter);
-		}
-		return selectedSubjects;
+		return $scope.selectedSubjects;
     };
-}
+}])

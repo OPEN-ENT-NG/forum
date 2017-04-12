@@ -90,12 +90,11 @@
                 <button ng-click="display.editSubject = true" ng-if="getSelectedSubjects().length === 1"><i18n>edit</i18n></button>
                 <button ng-click="confirmRemoveSelectedSubjects()"><i18n>remove</i18n></button>
                 <button
-                        ng-if="getSelectedSubjects({ locked: true, selected: true}).length === 0"
+                        ng-if="!containsLockedSubjects()"
                         ng-click="lockSelection()">
                     <i18n>lock</i18n>
                 </button>
-                <button ng-if="getSelectedSubjects({ locked: true, selected: true}).length > 0
-                                && (getSelectedSubjects({ locked: undefined, selected: true}).length === 0 || getSelectedSubjects().where({ locked: false, selected: true}).length === 0)"
+                <button ng-if="isLockedSubjects()"
                         ng-click="unlockSelection()">
                     <i18n>unlock</i18n>
                 </button>
