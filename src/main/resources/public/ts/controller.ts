@@ -349,29 +349,43 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		return true;
 	}
 
-	$scope.ownerCanEditMessage = function(subject, message) {
-		// only the last message can be edited
-		return (!subject.myRights.publish &&
-				!subject.category.myRights.publish &&
-				!subject.locked &&
-				model.me.userId === message.owner.userId &&
-				subject.messages.all[subject.messages.all.length-1] === message
-				);
-	};
+    $scope.ownerCanEditMessage = function(subject, message) {
+        // I can Edit or delete subject
+        return ((subject.myRights.contrib !== undefined &&
+            subject.category.myRights.contrib !== undefined &&
+            model.me.userId === message.owner.userId  &&
+            !subject.locked)
+            || (subject.myRights.publish !== undefined &&
+                subject.category.myRights.publish !== undefined
+            )
+        );
+    };
+
+    $scope.ownerCanEditSubject = function(subject) {
+        // I can Edit or delete subject
+        return ((subject.myRights.contrib !== undefined &&
+				subject.category.myRights.contrib !== undefined &&
+				model.me.userId === subject.owner.userId  &&
+				!subject.locked)
+			|| (subject.myRights.publish !== undefined &&
+                subject.category.myRights.publish !== undefined
+			)
+        );
+    };
 
     $scope.extractText = function(message){
         return $("<span>"+message.content+"</span>").text();
     };
 
 	$scope.lockSelection = function(){
-		$scope.getSelectedSubjects().forEach(function(subject){
+        $scope.getSelectedSubjects().forEach(function(subject){
 			subject.locked = true;
 			subject.save();
 		});
 	};
 
 	$scope.unlockSelection = function(){
-		$scope.getSelectedSubjects().forEach(function(subject){
+        $scope.getSelectedSubjects().forEach(function(subject){
 			subject.locked = false;
 			subject.save();
 		});

@@ -15,7 +15,7 @@
                     <img ng-src="[[cat.icon]]?thumbnail=120x120" ng-if="cat.icon !== undefined" class="cell" />
                 </div>
                 <div class="content">
-                    <resource-right name="manage" resource="cat">
+                    <resource-right name="contrib" resource="cat">
                         <input type="checkbox" class="cell" ng-hide="getSelectedSubjects().length > 0" ng-model="cat.selected" ng-change="hideAlmostAllButtons(cat)"/>
                     </resource-right>
                     <h1 class="eight cell">[[cat.name]]</h1>
@@ -44,10 +44,10 @@
             </li>
             <ul class="twelve secondary-list">
                 <li ng-repeat="subject in cat.subjects.all | limitTo: (cat.limitSubjects ? cat.limitSubjects : maxSubjects)" ng-class="{ selected: subject.selected }">
-                    <resource-right class="fixed-tiny" name="publish" resource="cat">
-						<input type="checkbox" ng-model="subject.selected"
+                    <resource-right class="fixed-tiny" name="contrib" resource="cat">
+						<input type="checkbox" ng-if="subject.myRights.publish || ownerCanEditSubject(subject)" ng-model="subject.selected"
                                ng-hide="categories.selection().length > 0 || getSelectedSubjects().length > 0 && getSelectedSubjects()[0].category !== cat"/>
-					</resource-right>
+                    </resource-right>
                     <h4 class="fixed-large text" ng-click="openSubject(subject)"><i class="prive" ng-if="subject.locked"></i>[[subject.title]]</h4>
                     <em class="fixed-regular small-text">[[subject.nbMessages]] <i18n>forum.discussion.messages</i18n></em>
                     <div class="fixed-regular centered-text small-text">
@@ -76,7 +76,7 @@
                 <button ng-click="confirmRemoveCategory(categories.selection()[0], $event)"><i18n>remove</i18n></button>
                 <button ng-click="shareCategory(categories.selection()[0], $event)"><i18n>share</i18n></button>
             </resource-right>
-            <resource-right name="publish" resource="categories.selection()" class="cell">
+            <resource-right name="contrib" resource="categories.selection()" class="cell">
         		<button ng-click="newSubject(categories.selection()[0])"><i18n>forum.subject.new</i18n></button>
         	</resource-right>
 		</div>
@@ -85,20 +85,21 @@
 
 <section class="toggle-buttons" ng-class="{ hide: getSelectedSubjects().length === 0 }">
     <div class="toggle">
-        <div class="row">
-            <resource-right name="publish" resource="getSelectedSubjects()[0].category" class="cell">
+        <div class="row" ng-if="getSelectedSubjects().length > 0 && (subject.myRights.publish || ownerCanEditSubject(getSelectedSubjects()[0]))">
                 <button ng-click="display.editSubject = true" ng-if="getSelectedSubjects().length === 1"><i18n>edit</i18n></button>
                 <button ng-click="confirmRemoveSelectedSubjects()"><i18n>remove</i18n></button>
-                <button
-                        ng-if="!containsLockedSubjects()"
-                        ng-click="lockSelection()">
-                    <i18n>lock</i18n>
-                </button>
-                <button ng-if="isLockedSubjects()"
-                        ng-click="unlockSelection()">
-                    <i18n>unlock</i18n>
-                </button>
-            </resource-right>
+                <resource-right name="publish" resource="getSelectedSubjects()[0].category" class="cell">
+                    <button
+                            ng-if="getSelectedSubjects({ locked: true, selected: true}).length === 0"
+                            ng-click="lockSelection()">
+                        <i18n>lock</i18n>
+                    </button>
+                    <button ng-if="getSelectedSubjects({ locked: true, selected: true}).length > 0
+                                    && (getSelectedSubjects({ locked: undefined, selected: true}).length === 0 || getSelectedSubjects().where({ locked: false, selected: true}).length === 0)"
+                            ng-click="unlockSelection()">
+                        <i18n>unlock</i18n>
+                    </button>
+                </resource-right>
         </div>
     </div>
 </section>

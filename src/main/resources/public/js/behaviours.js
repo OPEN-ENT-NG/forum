@@ -294,7 +294,7 @@
 	            right: 'net-atos-entng-forum-controllers-ForumController|createMessage'
 	        },
 	        publish: {
-	            right: 'net-atos-entng-forum-controllers-ForumController|createSubject'
+	            right: 'net-atos-entng-forum-controllers-ForumController|updateSubject'
 	        },
 	        manage: {
 	            right: 'net-atos-entng-forum-controllers-ForumController|updateCategory'
@@ -582,7 +582,6 @@
 	        }
 	    }
 	});
-	
 
 
 /***/ }),

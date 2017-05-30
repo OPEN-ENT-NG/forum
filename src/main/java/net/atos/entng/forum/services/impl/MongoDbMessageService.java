@@ -234,7 +234,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 				}
 				else {
 					// Prepare Category Query
-					final QueryBuilder anySharedQuery = QueryBuilder.start();
+						final QueryBuilder anySharedQuery = QueryBuilder.start();
 					prepareIsSharedAnyQuery(anySharedQuery, user, categoryId);
 
 					// Check Category Sharing with any method

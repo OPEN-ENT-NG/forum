@@ -47,15 +47,11 @@
     			</div>
     		</div>
     		<article class="margin-two bubble" ng-if="message !== editedMessage" ng-init="disableResizableElement = true">
-                <plus class="contextual-buttons right-magnet" ng-if="subject.myRights.publish || ownerCanEditMessage(subject, message)">
+                <plus class="contextual-buttons right-magnet" ng-if="ownerCanEditMessage(subject, message)">
                     <div class="row">
-                        <resource-right name="publish" resource="subject">
-        					<button class="cell" ng-click="confirmRemoveMessage(message)"><i18n>forum.remove</i18n></button>
-        				</resource-right>
-    					<!-- Moderators can edit all messages. Owner can edit his message only if the subject is not locked -->
-    					<resource-right class="cell" name="publish" resource="subject" >
-    						<button ng-click="editMessage(message)"><i18n>forum.edit</i18n></button>
-    					</resource-right>
+                        <button class="cell" ng-if="ownerCanEditMessage(subject, message)" ng-click="confirmRemoveMessage(message)">
+                            <i18n>forum.remove</i18n>
+                        </button>
     					<button class="cell" ng-if="ownerCanEditMessage(subject, message)" ng-click="editMessage(message)">
     					    <i18n>forum.edit</i18n>
     					</button>

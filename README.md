@@ -77,7 +77,8 @@ Exemple de document de la collection "forum.categories" :
 				"net-atos-entng-forum-controllers-ForumController|getCategory" : true,
 				"net-atos-entng-forum-controllers-ForumController|listMessages" : true,
 				"net-atos-entng-forum-controllers-ForumController|listSubjects" : true,
-				"net-atos-entng-forum-controllers-ForumController|createMessage" : true
+				"net-atos-entng-forum-controllers-ForumController|createMessage" : true,
+				"net-atos-entng-forum-controllers-ForumController|createSubject" : true
 			},
 			{
 				"userId" : "212e9b3c-91cc-47ca-a441-c6e32b1bf04b",

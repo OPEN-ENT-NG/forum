@@ -19,17 +19,19 @@
 
 package net.atos.entng.forum.controllers;
 
-import java.util.Map;
-
+import fr.wseduc.rs.*;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.http.BaseController;
 import net.atos.entng.forum.Forum;
 import net.atos.entng.forum.controllers.helpers.CategoryHelper;
 import net.atos.entng.forum.controllers.helpers.MessageHelper;
 import net.atos.entng.forum.controllers.helpers.SubjectHelper;
 import net.atos.entng.forum.filters.impl.ForumMessageMine;
+import net.atos.entng.forum.filters.impl.SubjectMessageMine;
 import net.atos.entng.forum.services.CategoryService;
 import net.atos.entng.forum.services.MessageService;
 import net.atos.entng.forum.services.SubjectService;
-
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -38,14 +40,7 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
 import org.vertx.java.platform.Container;
 
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
-import fr.wseduc.security.ActionType;
-import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.http.BaseController;
+import java.util.Map;
 
 public class ForumController extends BaseController {
 
@@ -141,7 +136,7 @@ public class ForumController extends BaseController {
 	}
 
 	@Post("/category/:id/subjects")
-	@SecuredAction(value = "category.publish", type = ActionType.RESOURCE)
+	@SecuredAction(value = "category.contrib", type = ActionType.RESOURCE)
 	public void createSubject(HttpServerRequest request) {
 		subjectHelper.create(request);
 	}
@@ -154,12 +149,14 @@ public class ForumController extends BaseController {
 
 	@Put("/category/:id/subject/:subjectid")
 	@SecuredAction(value = "category.publish", type = ActionType.RESOURCE)
+	@ResourceFilter(SubjectMessageMine.class)
 	public void updateSubject(HttpServerRequest request) {
 		subjectHelper.update(request);
 	}
 
 	@Delete("/category/:id/subject/:subjectid")
 	@SecuredAction(value = "category.publish", type = ActionType.RESOURCE)
+	@ResourceFilter(SubjectMessageMine.class)
 	public void deleteSubject(HttpServerRequest request) {
 		subjectHelper.delete(request);
 	}
@@ -184,14 +181,15 @@ public class ForumController extends BaseController {
 	}
 
 	@Put("/category/:id/subject/:subjectid/message/:messageid")
-	@ResourceFilter(ForumMessageMine.class)
 	@SecuredAction(value = "category.publish", type = ActionType.RESOURCE)
+	@ResourceFilter(ForumMessageMine.class)
 	public void updateMessage(HttpServerRequest request) {
 		messageHelper.update(request);
 	}
 
 	@Delete("/category/:id/subject/:subjectid/message/:messageid")
 	@SecuredAction(value = "category.publish", type = ActionType.RESOURCE)
+	@ResourceFilter(ForumMessageMine.class)
 	public void deleteMessage(HttpServerRequest request) {
 		messageHelper.delete(request);
 	}

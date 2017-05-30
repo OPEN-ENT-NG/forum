@@ -23,10 +23,14 @@ import static org.entcore.common.mongodb.MongoDbResult.validActionResultHandler;
 import static org.entcore.common.mongodb.MongoDbResult.validResultHandler;
 import static org.entcore.common.mongodb.MongoDbResult.validResultsHandler;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import net.atos.entng.forum.services.SubjectService;
 
+import org.entcore.common.service.VisibilityFilter;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -36,6 +40,9 @@ import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.mongodb.MongoUpdateBuilder;
 import fr.wseduc.webutils.Either;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MongoDbSubjectService extends AbstractService implements SubjectService {
 
@@ -128,5 +135,112 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 		JsonObject projection = new JsonObject();
 		projection.putNumber("title", 1);
 		mongo.findOne(subjects_collection, MongoQueryBuilder.build(query), projection, validActionResultHandler(handler));
+	}
+
+	@Override
+	public void checkIsSharedOrMine(final String categoryId, final String subjectId, final UserInfos user, final String sharedMethod, final Handler<Boolean> handler) {
+		// Prepare Category Query
+		final QueryBuilder methodSharedQuery = QueryBuilder.start();
+		prepareIsSharedMethodQuery(methodSharedQuery, user, categoryId, sharedMethod);
+		// Check Category Sharing with method
+		executeCountQuery(categories_collection, MongoQueryBuilder.build(methodSharedQuery), 1, new Handler<Boolean>() {
+			@Override
+			public void handle(Boolean event) {
+				if (event) {
+					handler.handle(true);
+				}
+				else {
+					// Prepare Category Query
+					final QueryBuilder anySharedQuery = QueryBuilder.start();
+					prepareIsSharedAnyQuery(anySharedQuery, user, categoryId);
+
+					// Check Category Sharing with any method
+					executeCountQuery(categories_collection, MongoQueryBuilder.build(anySharedQuery), 1, new Handler<Boolean>() {
+						@Override
+						public void handle(Boolean event) {
+							if (event) {
+								// Prepare Subject query
+								List<DBObject> groups = new ArrayList<>();
+								groups.add(QueryBuilder.start("userId").is(user.getUserId())
+										.put(sharedMethod).is(true).get());
+								for (String gpId: user.getGroupsIds()) {
+									groups.add(QueryBuilder.start("groupId").is(gpId)
+											.put(sharedMethod).is(true).get());
+								}
+
+								// Authorize if current user is the subject's owner, the categorie's author or if the serviceMethod has been shared
+								QueryBuilder query = QueryBuilder.start("_id").is(subjectId).or(
+										QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
+										QueryBuilder.start("shared").elemMatch(
+												new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+								);
+
+								// Check Message is mine
+								executeCountQuery(subjects_collection, MongoQueryBuilder.build(query), 1, handler);
+							}
+							else {
+								handler.handle(false);
+							}
+						}
+					});
+				}
+			}
+		});
+	}
+
+
+	protected void prepareIsSharedMethodQuery(final QueryBuilder query, final UserInfos user, final String threadId, final String sharedMethod) {
+		// ThreadId
+		query.put("_id").is(threadId);
+
+		// Permissions
+		List<DBObject> groups = new ArrayList<>();
+		groups.add(QueryBuilder.start("userId").is(user.getUserId())
+				.put(sharedMethod).is(true).get());
+		for (String gpId: user.getProfilGroupsIds()) {
+			groups.add(QueryBuilder.start("groupId").is(gpId)
+					.put(sharedMethod).is(true).get());
+		}
+		query.or(
+				QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
+				QueryBuilder.start("visibility").is(VisibilityFilter.PUBLIC.name()).get(),
+				QueryBuilder.start("visibility").is(VisibilityFilter.PROTECTED.name()).get(),
+				QueryBuilder.start("shared").elemMatch(
+						new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+		);
+	}
+
+	protected void executeCountQuery(final String collection, final JsonObject query, final int expectedCountResult, final Handler<Boolean> handler) {
+		mongo.count(collection, query, new Handler<Message<JsonObject>>() {
+			@Override
+			public void handle(Message<JsonObject> event) {
+				JsonObject res = event.body();
+				handler.handle(
+						res != null &&
+								"ok".equals(res.getString("status")) &&
+								expectedCountResult == res.getInteger("count")
+				);
+			}
+		});
+	}
+
+
+	protected void prepareIsSharedAnyQuery(final QueryBuilder query, final UserInfos user, final String threadId) {
+		// ThreadId
+		query.put("_id").is(threadId);
+
+		// Permissions
+		List<DBObject> groups = new ArrayList<>();
+		groups.add(QueryBuilder.start("userId").is(user.getUserId()).get());
+		for (String gpId: user.getProfilGroupsIds()) {
+			groups.add(QueryBuilder.start("groupId").is(gpId).get());
+		}
+		query.or(
+				QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
+				QueryBuilder.start("visibility").is(VisibilityFilter.PUBLIC.name()).get(),
+				QueryBuilder.start("visibility").is(VisibilityFilter.PROTECTED.name()).get(),
+				QueryBuilder.start("shared").elemMatch(
+						new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+		);
 	}
 }
