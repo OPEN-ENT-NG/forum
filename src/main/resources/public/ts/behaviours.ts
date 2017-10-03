@@ -1,8 +1,11 @@
-import { model, notify, http, Collection, idiom as lang } from 'entcore/entcore';
-import { moment } from 'entcore/libs/moment/moment';
-import { _ } from 'entcore/libs/underscore/underscore'
-
-declare let Behaviours:any
+import { idiom as lang } from 'entcore/entcore';
+declare let moment;
+declare let _;
+declare let Behaviours;
+declare let http;
+declare let notify;
+declare let model;
+declare let Collection;
 
 console.log('forum behaviours loaded');
 
