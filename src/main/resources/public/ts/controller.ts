@@ -1,7 +1,4 @@
-import {routes, model, Behaviours, ng, template } from 'entcore/entcore';
-import { moment } from 'entcore/libs/moment/moment';
-import { $ } from 'entcore/libs/jquery/jquery';
-import { _ } from 'entcore/libs/underscore/underscore'
+import {routes, model, Behaviours, ng, template, moment, $, _ } from 'entcore';
 
 export let forumController = ng.controller('ForumController', ['$scope', 'model', 'route',
 	function ($scope, model, route){

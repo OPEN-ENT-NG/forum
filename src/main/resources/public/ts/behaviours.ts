@@ -1,4 +1,4 @@
-import { idiom as lang } from 'entcore/entcore';
+import { idiom as lang } from 'entcore';
 declare let moment;
 declare let _;
 declare let Behaviours;
@@ -338,16 +338,19 @@ Behaviours.register('forum', {
 	resourceRights: function(){
 		return ['read', 'contrib', 'publish', 'manager']
 	},*/
-	loadResources: function(callback) {
-		http().get('/forum/categories').done(function(categories) {
-			this.resources = _.map(categories, function(category) {
-				category.title = category.name;
-				category.icon = category.icon || '/img/illustrations/forum-default.png';
-				category.path = '/forum#/view/' + category._id;
-				return category;
-			});
-			callback(this.resources);
-		}.bind(this));
+	loadResources: async function() {
+		return new Promise((resolve, reject) => {
+			http().get('/forum/categories').done(function(categories) {
+				this.resources = _.map(categories, function(category) {
+					category.title = category.name;
+					category.icon = category.icon || '/img/illustrations/forum-default.png';
+					category.path = '/forum#/view/' + category._id;
+					return category;
+				});
+				resolve(this.resources);
+			}.bind(this));
+		})
+		
 	},
 
     sniplets : {

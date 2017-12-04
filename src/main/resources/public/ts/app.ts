@@ -1,4 +1,4 @@
-import {routes, ng, model, notify, http, BaseModel, Collection, Behaviours} from 'entcore/entcore'
+import {routes, ng, model, notify, http, BaseModel, Collection, Behaviours} from 'entcore'
 import { forumExtensions } from './extensions';
 import { forumController } from './controller'
 

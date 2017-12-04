@@ -1,5 +1,4 @@
-﻿import {RTE } from 'entcore/entcore';
-import { $ } from 'entcore/libs/jquery/jquery';
+﻿import {RTE, $ } from 'entcore';
 
 export let forumExtensions = {
     extendEditor: function () {
