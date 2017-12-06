@@ -125,8 +125,8 @@
         <input type="text" i18n-placeholder="forum.subject" ng-model="getSelectedSubjects()[0].title" class="twelve cell" />
     </div>
     <div class="row">
-        <input type="button" class="cancel cell right-magnet" i18n-value="cancel" ng-click="openCategory(getSelectedSubjects()[0].category); display.editSubject = false;" />
         <input type="submit" i18n-value="save" class="cell right-magnet" ng-click="getSelectedSubjects()[0].save(); display.editSubject = false;" />
+        <input type="button" class="cancel cell right-magnet" i18n-value="cancel" ng-click="openCategory(getSelectedSubjects()[0].category); display.editSubject = false;" />
     </div>
 
 </lightbox>
