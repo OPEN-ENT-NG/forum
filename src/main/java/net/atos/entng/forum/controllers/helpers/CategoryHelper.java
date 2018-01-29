@@ -34,12 +34,12 @@ import org.entcore.common.share.ShareService;
 import org.entcore.common.share.impl.MongoDbShareService;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Container;
+import io.vertx.core.json.JsonObject;
+
 
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -67,8 +67,8 @@ public class CategoryHelper extends MongoDbControllerHelper {
 	}
 
 	@Override
-	public void init(Vertx vertx, Container container, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
-		super.init(vertx, container, rm, securedActions);
+	public void init(Vertx vertx, JsonObject config, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
+		super.init(vertx, config, rm, securedActions);
 		this.shareService = new MongoDbShareService(eb, mongo, managedCollection, securedActions, null);
 	}
 
@@ -116,7 +116,7 @@ public class CategoryHelper extends MongoDbControllerHelper {
 						if (event.isRight()) {
 							categoryService.delete(id, user, defaultResponseHandler(request));
 						} else {
-							JsonObject error = new JsonObject().putString("error", event.left().getValue());
+							JsonObject error = new JsonObject().put("error", event.left().getValue());
 							Renders.renderJson(request, error, 400);
 						}
 					}
@@ -141,9 +141,9 @@ public class CategoryHelper extends MongoDbControllerHelper {
 			            return;
 			        }
 					JsonObject params = new JsonObject()
-					.putString("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
-					.putString("username", user.getUsername())
-					.putString("resourceUri", pathPrefix + "#/view/" + categoryId);
+					.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+					.put("username", user.getUsername())
+					.put("resourceUri", pathPrefix + "#/view/" + categoryId);
 					shareJsonSubmit(request, "forum.category-shared", false, params, "name");
 				} else {
 					unauthorized(request);

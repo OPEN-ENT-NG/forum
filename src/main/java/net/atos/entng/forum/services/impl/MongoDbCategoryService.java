@@ -28,9 +28,9 @@ import java.util.List;
 import net.atos.entng.forum.services.CategoryService;
 
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
@@ -61,7 +61,7 @@ public class MongoDbCategoryService extends AbstractService implements CategoryS
 					new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()
 			).get());
 
-		JsonObject sort = new JsonObject().putNumber("modified", -1);
+		JsonObject sort = new JsonObject().put("modified", -1);
 		mongo.find(categories_collection, MongoQueryBuilder.build(query), sort, null, validResultsHandler(handler));
 	}
 
@@ -91,10 +91,10 @@ public class MongoDbCategoryService extends AbstractService implements CategoryS
 	 */
 	@Override
 	public void getOwnerAndShared(String categoryId, UserInfos user, final Handler<Either<String, JsonObject>> handler) {
-		JsonObject matcher = new JsonObject().putString("_id", categoryId);
-		JsonObject projection = new JsonObject().putNumber("owner.userId", 1)
-				.putNumber("shared", 1)
-				.putNumber("_id", 0);
+		JsonObject matcher = new JsonObject().put("_id", categoryId);
+		JsonObject projection = new JsonObject().put("owner.userId", 1)
+				.put("shared", 1)
+				.put("_id", 0);
 
 		mongo.findOne(categories_collection, matcher, projection, validResultHandler(handler));
 	}

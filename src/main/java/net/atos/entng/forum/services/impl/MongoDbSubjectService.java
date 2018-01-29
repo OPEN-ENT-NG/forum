@@ -29,10 +29,10 @@ import net.atos.entng.forum.services.SubjectService;
 
 import org.entcore.common.service.VisibilityFilter;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.mongodb.QueryBuilder;
 
@@ -54,13 +54,13 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 	public void list(final String categoryId, final UserInfos user, final Handler<Either<String, JsonArray>> handler) {
 		// Query
 		QueryBuilder query = QueryBuilder.start("category").is(categoryId);
-		JsonObject sort = new JsonObject().putNumber("modified", -1);
+		JsonObject sort = new JsonObject().put("modified", -1);
 
 		// Projection
 		JsonObject projection = new JsonObject();
 		JsonObject slice = new JsonObject();
-		slice.putNumber("$slice", -1);
-		projection.putObject("messages", slice);
+		slice.put("$slice", -1);
+		projection.put("messages", slice);
 
 		mongo.find(subjects_collection, MongoQueryBuilder.build(query), sort, projection, validResultsHandler(handler));
 	}
@@ -69,17 +69,17 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 	public void create(String categoryId, JsonObject body, UserInfos user, Handler<Either<String, JsonObject>> handler) {
 
 		// Clean data
-		body.removeField("_id");
-		body.removeField("category");
-		body.removeField("messages");
+		body.remove("_id");
+		body.remove("category");
+		body.remove("messages");
 
 		// Prepare data
 		JsonObject now = MongoDb.now();
-		body.putObject("owner", new JsonObject()
-				.putString("userId", user.getUserId())
-				.putString("displayName", user.getUsername())
-		).putObject("created", now).putObject("modified", now)
-		.putString("category", categoryId);
+		body.put("owner", new JsonObject()
+				.put("userId", user.getUserId())
+				.put("displayName", user.getUsername())
+		).put("created", now).put("modified", now)
+		.put("category", categoryId);
 
 		mongo.save(subjects_collection, body, validActionResultHandler(handler));
 
@@ -94,8 +94,8 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 		// Projection
 		JsonObject projection = new JsonObject();
 		JsonObject slice = new JsonObject();
-		slice.putNumber("$slice", -1);
-		projection.putObject("messages", slice);
+		slice.put("$slice", -1);
+		projection.put("messages", slice);
 
 		mongo.findOne(subjects_collection,  MongoQueryBuilder.build(query), projection, validResultHandler(handler));
 	}
@@ -107,13 +107,13 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 		query.put("category").is(categoryId);
 
 		// Clean data
-		body.removeField("_id");
-		body.removeField("category");
-		body.removeField("messages");
+		body.remove("_id");
+		body.remove("category");
+		body.remove("messages");
 
 		// Modifier
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
-		for (String attr: body.getFieldNames()) {
+		for (String attr: body.fieldNames()) {
 			modifier.set(attr, body.getValue(attr));
 		}
 		modifier.set("modified", MongoDb.now());
@@ -133,7 +133,7 @@ public class MongoDbSubjectService extends AbstractService implements SubjectSer
 		query.put("category").is(categoryId);
 		// Projection
 		JsonObject projection = new JsonObject();
-		projection.putNumber("title", 1);
+		projection.put("title", 1);
 		mongo.findOne(subjects_collection, MongoQueryBuilder.build(query), projection, validActionResultHandler(handler));
 	}
 

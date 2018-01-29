@@ -31,12 +31,12 @@ import org.entcore.common.search.SearchingEvents;
 import org.entcore.common.service.VisibilityFilter;
 import org.entcore.common.service.impl.MongoDbSearchService;
 import org.entcore.common.utils.StringUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -59,7 +59,7 @@ public class ForumSearchingEvents implements SearchingEvents {
 							   final JsonArray columnsHeader, final String locale, final Handler<Either<String, JsonArray>> handler) {
 		if (appFilters.contains(ForumSearchingEvents.class.getSimpleName())) {
 
-			final List<String> groupIdsLst = groupIds.toList();
+			final List<String> groupIdsLst = groupIds.getList();
 			final List<DBObject> groups = new ArrayList<DBObject>();
 			groups.add(QueryBuilder.start("userId").is(userId).get());
 			for (String gpId: groupIdsLst) {
@@ -74,9 +74,9 @@ public class ForumSearchingEvents implements SearchingEvents {
 							new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()
 					).get());
 
-			JsonObject sort = new JsonObject().putNumber("modified", -1);
+			JsonObject sort = new JsonObject().put("modified", -1);
 			final JsonObject projection = new JsonObject();
-			projection.putNumber("name", 1);
+			projection.put("name", 1);
 			//search all category of user
 			mongo.find(Forum.CATEGORY_COLLECTION, MongoQueryBuilder.build(rightsQuery), sort,
 					projection, new Handler<Message<JsonObject>>() {
@@ -88,19 +88,19 @@ public class ForumSearchingEvents implements SearchingEvents {
 
 								final Map<String, String> mapIdName = new HashMap<String, String>();
 								for (int i=0;i<categoryResult.size();i++) {
-									final JsonObject j = categoryResult.get(i);
+									final JsonObject j = categoryResult.getJsonObject(i);
 									mapIdName.put(j.getString("_id"), j.getString("name"));
 								}
 
 								//search subject for the catagories found
-								searchSubject(page, limit, searchWords.toList(), mapIdName, new Handler<Either<String, JsonArray>>() {
+								searchSubject(page, limit, searchWords.getList(), mapIdName, new Handler<Either<String, JsonArray>>() {
 									@Override
 									public void handle(Either<String, JsonArray> event) {
 										if (event.isRight()) {
 											if (log.isDebugEnabled()) {
 												log.debug("[ForumSearchingEvents][searchResource] The resources searched by user are finded");
 											}
-											final JsonArray res = formatSearchResult(event.right().getValue(), columnsHeader, searchWords.toList(), mapIdName, locale);
+											final JsonArray res = formatSearchResult(event.right().getValue(), columnsHeader, searchWords.getList(), mapIdName, locale);
 											handler.handle(new Right<String, JsonArray>(res));
 										} else {
 											handler.handle(new Either.Left<String, JsonArray>(event.left().getValue()));
@@ -127,14 +127,14 @@ public class ForumSearchingEvents implements SearchingEvents {
 
 		final QueryBuilder query = new QueryBuilder().and(worldsQuery.get(), categoryQuery.get());
 
-		JsonObject sort = new JsonObject().putNumber("modified", -1);
+		JsonObject sort = new JsonObject().put("modified", -1);
 		final JsonObject projection = new JsonObject();
-		projection.putNumber("title", 1);
-		projection.putNumber("messages", 1);
-		projection.putNumber("category", 1);
-		projection.putNumber("modified", 1);
-		projection.putNumber("owner.userId", 1);
-		projection.putNumber("owner.displayName", 1);
+		projection.put("title", 1);
+		projection.put("messages", 1);
+		projection.put("category", 1);
+		projection.put("modified", 1);
+		projection.put("owner.userId", 1);
+		projection.put("owner.displayName", 1);
 
 		mongo.find(Forum.SUBJECT_COLLECTION, MongoQueryBuilder.build(query), sort,
 				projection, skip, limit, Integer.MAX_VALUE, validResultsHandler(handler));
@@ -142,22 +142,22 @@ public class ForumSearchingEvents implements SearchingEvents {
 
 	private JsonArray formatSearchResult(final JsonArray results, final JsonArray columnsHeader, final List<String> words,
 										 final Map<String,String> mapIdName, final String locale) {
-		final List<String> aHeader = columnsHeader.toList();
+		final List<String> aHeader = columnsHeader.getList();
 		final JsonArray traity = new JsonArray();
 
 		for (int i=0;i<results.size();i++) {
-			final JsonObject j = results.get(i);
+			final JsonObject j = results.getJsonObject(i);
 			final JsonObject jr = new JsonObject();
 			if (j != null) {
 				final String categoryId = j.getString("category");
-				final Map<String, Object> map = formatDescription(j.getArray("messages", new JsonArray()),
-						words, j.getObject("modified"), categoryId, j.getString("_id"), j.getString("title"), locale);
-				jr.putString(aHeader.get(0),  mapIdName.get(categoryId));
-				jr.putString(aHeader.get(1), map.get("description").toString());
-				jr.putObject(aHeader.get(2), (JsonObject) map.get("modified"));
-				jr.putString(aHeader.get(3), j.getObject("owner").getString("displayName"));
-				jr.putString(aHeader.get(4), j.getObject("owner").getString("userId"));
-				jr.putString(aHeader.get(5), "/forum#/view/" + categoryId);
+				final Map<String, Object> map = formatDescription(j.getJsonArray("messages", new JsonArray()),
+						words, j.getJsonObject("modified"), categoryId, j.getString("_id"), j.getString("title"), locale);
+				jr.put(aHeader.get(0),  mapIdName.get(categoryId));
+				jr.put(aHeader.get(1), map.get("description").toString());
+				jr.put(aHeader.get(2), (JsonObject) map.get("modified"));
+				jr.put(aHeader.get(3), j.getJsonObject("owner").getString("displayName"));
+				jr.put(aHeader.get(4), j.getJsonObject("owner").getString("userId"));
+				jr.put(aHeader.get(5), "/forum#/view/" + categoryId);
 				traity.add(jr);
 			}
 		}
@@ -180,10 +180,10 @@ public class ForumSearchingEvents implements SearchingEvents {
 
 		//get the last modified page that match with searched words for create the description
 		for(int i=0;i<ja.size();i++) {
-			final JsonObject jO = ja.get(i);
+			final JsonObject jO = ja.getJsonObject(i);
 			final String content = jO.getString("content" ,"");
 
-			final Date currentDate = MongoDb.parseIsoDate(jO.getObject("modified"));
+			final Date currentDate = MongoDb.parseIsoDate(jO.getJsonObject("modified"));
 			int match = unaccentWords.size();
 			for (final String word : unaccentWords) {
 				if (StringUtils.stripAccentsToLowerCase(content).contains(word)) {
@@ -191,10 +191,10 @@ public class ForumSearchingEvents implements SearchingEvents {
 				}
 			}
 			if (countMatchMessages == 0 && match == 0) {
-				modifiedRes = jO.getObject("modified");
+				modifiedRes = jO.getJsonObject("modified");
 			} else if (countMatchMessages > 0 && modifiedMarker.before(currentDate)) {
 				modifiedMarker = currentDate;
-				modifiedRes = jO.getObject("modified");
+				modifiedRes = jO.getJsonObject("modified");
 			}
 			if (match == 0) {
 				modifiedMarker = currentDate;

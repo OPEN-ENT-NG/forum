@@ -33,13 +33,13 @@ import net.atos.entng.forum.services.SubjectService;
 import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Container;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
@@ -63,9 +63,9 @@ public class SubjectHelper extends ExtractorHelper {
 	}
 
 	@Override
-	public void init(Vertx vertx, Container container, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
-		super.init(vertx, container, rm, securedActions);
-		this.notification = new TimelineHelper(vertx, eb, container);
+	public void init(Vertx vertx, JsonObject config, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
+		super.init(vertx, config, rm, securedActions);
+		this.notification = new TimelineHelper(vertx, eb, config);
 	}
 
 	public void list(final HttpServerRequest request) {
@@ -129,7 +129,7 @@ public class SubjectHelper extends ExtractorHelper {
 											renderJson(request, event.right().getValue(), 200);
 										}
 									} else {
-										JsonObject error = new JsonObject().putString("error", event.left().getValue());
+										JsonObject error = new JsonObject().put("error", event.left().getValue());
 										renderJson(request, error, 400);
 									}
 								}
@@ -169,7 +169,7 @@ public class SubjectHelper extends ExtractorHelper {
 											renderJson(request, event.right().getValue(), 200);
 										}
 									} else {
-										JsonObject error = new JsonObject().putString("error", event.left().getValue());
+										JsonObject error = new JsonObject().put("error", event.left().getValue());
 										renderJson(request, error, 400);
 									}
 								}
@@ -222,13 +222,13 @@ public class SubjectHelper extends ExtractorHelper {
 				else {
 					JsonObject result = event.right().getValue();
 					if(result == null ||
-							(result.getObject("owner", null) == null && result.getArray("shared", null) == null)) {
+							(result.getJsonObject("owner", null) == null && result.getJsonArray("shared", null) == null)) {
 						log.error("Unable to send " + eventType
 								+ " timeline notification. No owner nor shared found for category " + categoryId);
 						return;
 					}
 
-					String ownerId = result.getObject("owner").getString("userId", null);
+					String ownerId = result.getJsonObject("owner").getString("userId", null);
 					if(ownerId == null || ownerId.isEmpty()) {
 						log.error("Unable to send " + eventType
 								+ " timeline notification. OwnerId not found for category "  +categoryId);
@@ -242,7 +242,7 @@ public class SubjectHelper extends ExtractorHelper {
 					}
 
 					// 2) Add users in array "shared" to recipients
-					JsonArray shared = result.getArray("shared");
+					JsonArray shared = result.getJsonArray("shared");
 
 					if(shared != null && shared.size() > 0) {
 						JsonObject jo;
@@ -250,15 +250,15 @@ public class SubjectHelper extends ExtractorHelper {
 						final AtomicInteger remaining = new AtomicInteger(shared.size());
 
 						for(int i=0; i<shared.size(); i++){
-							jo = shared.get(i);
-							if(jo.containsField("userId")){
-								uId = ((JsonObject) shared.get(i)).getString("userId");
+							jo = shared.getJsonObject(i);
+							if(jo.containsKey("userId")){
+								uId = ((JsonObject) shared.getJsonObject(i)).getString("userId");
 								if(!uId.equals(user.getUserId()) && !recipients.contains(uId)){
 									recipients.add(uId);
 								}
 								remaining.getAndDecrement();
 							}
-							else if(jo.containsField("groupId")){
+							else if(jo.containsKey("groupId")){
 								groupId = jo.getString("groupId");
 								if (groupId != null) {
 									// Get users' ids of the group (exclude current userId)
@@ -309,11 +309,11 @@ public class SubjectHelper extends ExtractorHelper {
 		}
 
 		JsonObject params = new JsonObject()
-			.putString("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
-			.putString("username", user.getUsername())
-			.putString("subject", subject.getString("title"))
-			.putString("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId);
-		params.putString("resourceUri", params.getString("subjectUri"));
+			.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+			.put("username", user.getUsername())
+			.put("subject", subject.getString("title"))
+			.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId);
+		params.put("resourceUri", params.getString("subjectUri"));
 
 		if (subjectId != null && !subjectId.isEmpty()) {
 			notification.notifyTimeline(request, notificationName, user, recipients, categoryId, params);

@@ -41,7 +41,7 @@ public class Forum extends BaseServer {
 	public static final String MANAGE_RIGHT_ACTION = "net-atos-entng-forum-controllers-ForumController|updateCategory";
 
 	@Override
-	public void start() {
+	public void start() throws Exception {
 		super.start();
 		// Subscribe to events published for transition
 		setRepositoryEvents(new ForumRepositoryEvents());
