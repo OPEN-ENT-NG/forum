@@ -23,6 +23,7 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
+import io.vertx.core.json.JsonObject;
 import net.atos.entng.forum.Forum;
 import net.atos.entng.forum.controllers.helpers.CategoryHelper;
 import net.atos.entng.forum.controllers.helpers.MessageHelper;
@@ -35,10 +36,10 @@ import net.atos.entng.forum.services.SubjectService;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.platform.Container;
+
 
 import java.util.Map;
 
@@ -57,12 +58,12 @@ public class ForumController extends BaseController {
 		this.messageHelper = new MessageHelper(messageService, subjectService);
 	}
 
-	@Override
-	public void init(Vertx vertx, Container container, RouteMatcher rm, Map<String, fr.wseduc.webutils.security.SecuredAction> securedActions) {
-		super.init(vertx, container, rm, securedActions);
-		this.categoryHelper.init(vertx, container, rm, securedActions);
-		this.subjectHelper.init(vertx, container, rm, securedActions);
-		this.messageHelper.init(vertx, container, rm, securedActions);
+		@Override
+		public void init(Vertx vertx, JsonObject config, RouteMatcher rm, Map<String, fr.wseduc.webutils.security.SecuredAction> securedActions) {
+		super.init(vertx, config, rm, securedActions);
+		this.categoryHelper.init(vertx, config, rm, securedActions);
+		this.subjectHelper.init(vertx, config, rm, securedActions);
+		this.messageHelper.init(vertx, config, rm, securedActions);
 		eventStore = EventStoreFactory.getFactory().getEventStore(Forum.class.getSimpleName());
 	}
 

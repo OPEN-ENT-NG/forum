@@ -31,13 +31,13 @@ import net.atos.entng.forum.services.SubjectService;
 
 import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Container;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
@@ -64,9 +64,9 @@ public class MessageHelper extends ExtractorHelper {
 	}
 
 	@Override
-	public void init(Vertx vertx, Container container, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
-		super.init(vertx, container, rm, securedActions);
-		this.notification = new TimelineHelper(vertx, eb, container);
+	public void init(Vertx vertx, JsonObject config, RouteMatcher rm, Map<String, SecuredAction> securedActions) {
+		super.init(vertx, config, rm, securedActions);
+		this.notification = new TimelineHelper(vertx, eb, config);
 	}
 
 	public void list(final HttpServerRequest request) {
@@ -133,7 +133,7 @@ public class MessageHelper extends ExtractorHelper {
 											renderJson(request, event.right().getValue(), 200);
 										}
 									} else {
-										JsonObject error = new JsonObject().putString("error", event.left().getValue());
+										JsonObject error = new JsonObject().put("error", event.left().getValue());
 										renderJson(request, error, 400);
 									}
 								}
@@ -174,7 +174,7 @@ public class MessageHelper extends ExtractorHelper {
 											renderJson(request, event.right().getValue(), 200);
 										}
 									} else {
-										JsonObject error = new JsonObject().putString("error", event.left().getValue());
+										JsonObject error = new JsonObject().put("error", event.left().getValue());
 										renderJson(request, error, 400);
 									}
 								}
@@ -231,7 +231,7 @@ public class MessageHelper extends ExtractorHelper {
 									String id = null;
 									// Extract owners
 									for(int i=0; i<owners.size(); i++){
-										id = ((JsonObject) owners.get(i)).getString("userId");
+										id = ((JsonObject) owners.getJsonObject(i)).getString("userId");
 										if(!id.equals(user.getUserId()) && !ids.contains(id)){
 											ids.add(id);
 										}
@@ -258,12 +258,12 @@ public class MessageHelper extends ExtractorHelper {
 										overview = overview.concat(" ... </p>");
 									}
 									JsonObject params = new JsonObject()
-										.putString("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
-										.putString("username", user.getUsername())
-										.putString("subject", subject.getObject("result").getString("title"))
-										.putString("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
-										.putString("overview", overview);
-									params.putString("resourceUri", params.getString("subjectUri"));
+										.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+										.put("username", user.getUsername())
+										.put("subject", subject.getJsonObject("result").getString("title"))
+										.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
+										.put("overview", overview);
+									params.put("resourceUri", params.getString("subjectUri"));
 									if (subjectId != null && !subjectId.trim().isEmpty()) {
 										notification.notifyTimeline(request, notificationName, user, ids, subjectId, params);
 									}

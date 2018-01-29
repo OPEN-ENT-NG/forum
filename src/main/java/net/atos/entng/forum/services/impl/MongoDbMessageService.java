@@ -31,10 +31,10 @@ import org.bson.types.ObjectId;
 import org.entcore.common.service.VisibilityFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -59,7 +59,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 
 		// Projection
 		JsonObject projection = new JsonObject();
-		projection.putNumber("messages", 1);
+		projection.put("messages", 1);
 
 		mongo.findOne(subjects_collection, MongoQueryBuilder.build(query), projection, validResultHandler(new Handler<Either<String, JsonObject>>(){
 			@Override
@@ -68,8 +68,8 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 					try {
 						// Extract messages
 						JsonObject subject = event.right().getValue();
-						if (subject.containsField("messages")) {
-							 handler.handle(new Either.Right<String, JsonArray>(subject.getArray("messages")));
+						if (subject.containsKey("messages")) {
+							 handler.handle(new Either.Right<String, JsonArray>(subject.getJsonArray("messages")));
 						}
 						else {
 							 handler.handle(new Either.Right<String, JsonArray>(new JsonArray()));
@@ -91,12 +91,12 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 		// Prepare Message object
 		final ObjectId newId = new ObjectId();
 		JsonObject now = MongoDb.now();
-		body.putString("_id", newId.toStringMongod())
-			.putObject("owner", new JsonObject()
-				.putString("userId", user.getUserId())
-				.putString("displayName", user.getUsername()))
-				.putString("contentPlain",  StringUtils.stripHtmlTag(body.getString("content", "")))
-			.putObject("created", now).putObject("modified", now);
+		body.put("_id", newId.toStringMongod())
+			.put("owner", new JsonObject()
+				.put("userId", user.getUserId())
+				.put("displayName", user.getUsername()))
+				.put("contentPlain",  StringUtils.stripHtmlTag(body.getString("content", "")))
+			.put("created", now).put("modified", now);
 
 		// Prepare Query
 		QueryBuilder query = QueryBuilder.start("_id").is(subjectId);
@@ -112,10 +112,10 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 			public void handle(Either<String, JsonObject> event) {
 				if (event.isRight()) {
 					try {
-						if (event.right().getValue().getNumber("number").intValue() == 1) {
+						if (event.right().getValue().getInteger("number").intValue() == 1) {
 							// Respond with created message Id
 							JsonObject created = new JsonObject();
-							created.putString("_id", newId.toStringMongod());
+							created.put("_id", newId.toStringMongod());
 							handler.handle(new Either.Right<String, JsonObject>(created));
 						}
 						else {
@@ -142,11 +142,11 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 
 		// Projection
 		JsonObject idMatch = new JsonObject();
-		idMatch.putString("_id", messageId);
+		idMatch.put("_id", messageId);
 		JsonObject elemMatch = new JsonObject();
-		elemMatch.putObject("$elemMatch", idMatch);
+		elemMatch.put("$elemMatch", idMatch);
 		JsonObject projection = new JsonObject();
-		projection.putObject("messages", elemMatch);
+		projection.put("messages", elemMatch);
 
 		mongo.findOne(subjects_collection, MongoQueryBuilder.build(query), projection, validResultHandler(new Handler<Either<String, JsonObject>>(){
 			@Override
@@ -155,9 +155,9 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 					try {
 						// Extract message
 						JsonObject subject = event.right().getValue();
-						if (subject.containsField("messages")) {
-							JsonArray messages = subject.getArray("messages");
-							JsonObject extractedMessage = messages.get(0);
+						if (subject.containsKey("messages")) {
+							JsonArray messages = subject.getJsonArray("messages");
+							JsonObject extractedMessage = messages.getJsonObject(0);
 							handler.handle(new Either.Right<String, JsonObject>(extractedMessage));
 						}
 						else {
@@ -184,10 +184,10 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		// Prepare Message object update
-		body.removeField("_id");
-		body.removeField("owner");
+		body.remove("_id");
+		body.remove("owner");
 
-		for (String attr: body.getFieldNames()) {
+		for (String attr: body.fieldNames()) {
 			modifier.set("messages.$." + attr, body.getValue(attr));
 		}
 		modifier.set("messages.$.modified", MongoDb.now());
@@ -210,7 +210,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		// Prepare Message delete
 		JsonObject messageMatcher = new JsonObject();
-		modifier.pull("messages", messageMatcher.putString("_id", messageId));
+		modifier.pull("messages", messageMatcher.put("_id", messageId));
 		modifier.inc("nbMessages", -1);
 		modifier.set("modified", MongoDb.now());
 
@@ -333,8 +333,8 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 							JsonObject message = null;
 							// Extract owners
 							for(int i=0; i<messages.size();i++){
-								message = messages.get(i);
-								contibutorsIds.add(message.getObject("owner"));
+								message = messages.getJsonObject(i);
+								contibutorsIds.add(message.getJsonObject("owner"));
 							}
 							handler.handle(new Either.Right<String, JsonArray>(contibutorsIds));
 						}

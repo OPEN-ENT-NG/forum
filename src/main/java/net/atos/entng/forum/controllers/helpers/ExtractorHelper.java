@@ -21,9 +21,9 @@ package net.atos.entng.forum.controllers.helpers;
 
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.http.Renders;
@@ -88,9 +88,9 @@ public abstract class ExtractorHelper extends BaseController {
 		log.error(e.getMessage(), e);
 		
 		JsonObject error = new JsonObject();
-		error.putString("class", e.getClass().getName());
+		error.put("class", e.getClass().getName());
 		if (e.getMessage() != null) {
-			error.putString("message", e.getMessage());
+			error.put("message", e.getMessage());
 		}
 		Renders.renderError(request, error);
 	}	
