@@ -1,11 +1,10 @@
-import { idiom as lang } from 'entcore';
+import { idiom as lang, Collection} from 'entcore';
 declare let moment;
 declare let _;
 declare let Behaviours;
 declare let http;
 declare let notify;
 declare let model;
-declare let Collection;
 
 console.log('forum behaviours loaded');
 
