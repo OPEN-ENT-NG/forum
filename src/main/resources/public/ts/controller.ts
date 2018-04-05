@@ -142,6 +142,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
         $scope.category = category;
 		$scope.subject = new Behaviours.applicationsBehaviours.forum.namespace.Subject();
         $scope.subjects = category.subjects;
+		$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
 		template.open('main', 'new-subject');
 	};
 
@@ -189,12 +190,13 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		$scope.display.confirmDeleteSubjects = undefined;
 	};
 
-	$scope.addMessage = function(){
-		if ($scope.isTextEmpty($scope.editedMessage.content)) {
+	$scope.addMessage = function(newMessage){
+		if ($scope.isTextEmpty(newMessage.content)) {
 			$scope.editedMessage.error = 'forum.message.empty';
 			return;
 		}
-
+		$scope.editedMessage.content = newMessage.content;
+		newMessage.content = "";
 		$scope.editedMessage.error = undefined;
 		$scope.subject.addMessage($scope.editedMessage);
 		setTimeout(function () {
