@@ -82,11 +82,11 @@
     			</div>
     		</div>
             <article class="margin-two bubble">
-        		<editor ng-model="editedMessage.content" inline required></editor>
+        		<editor ng-model="newMessage.content" inline required></editor>
         		<div class="ten cell warning" ng-if="editedMessage.error !== undefined" translate content="[[editedMessage.error]]">
         		</div>
                 <div class="row">
-                    <button ng-mousedown="addMessage()" ng-if="!subject.locked"><i18n>forum.reply</i18n></button>
+                    <button ng-click="addMessage(newMessage)" ng-if="!subject.locked"><i18n>forum.reply</i18n></button>
                 </div>
         	</article>
         </div>
