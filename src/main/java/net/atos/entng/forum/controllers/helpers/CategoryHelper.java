@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Put;
+import fr.wseduc.security.ActionType;
 import net.atos.entng.forum.services.CategoryService;
 
 import org.entcore.common.mongodb.MongoDbControllerHelper;
@@ -166,6 +169,28 @@ public class CategoryHelper extends MongoDbControllerHelper {
                     });
 				} else {
 					unauthorized(request);
+				}
+			}
+		});
+	}
+
+	public void shareResource(final HttpServerRequest request) {
+		UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+			@Override
+			public void handle(final UserInfos user) {
+				if (user != null) {
+					final String id = request.params().get("id");
+					if(id == null || id.trim().isEmpty()) {
+						badRequest(request, "invalid.id");
+						return;
+					}
+
+					JsonObject params = new JsonObject()
+							.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+							.put("username", user.getUsername())
+							.put("resourceUri", pathPrefix + "#/view/" + id);
+
+					shareResource(request, "pages.shared", false, params, "title");
 				}
 			}
 		});
