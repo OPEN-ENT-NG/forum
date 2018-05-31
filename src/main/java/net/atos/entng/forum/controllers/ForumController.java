@@ -129,6 +129,12 @@ public class ForumController extends BaseController {
 		categoryHelper.shareRemove(request);
 	}
 
+	@Put("/share/resource/:id")
+	@ApiDoc("Share thread by id.")
+	@SecuredAction(value = "category.manager", type = ActionType.RESOURCE)
+	public void shareResource(final HttpServerRequest request) {
+		categoryHelper.shareResource(request);
+	}
 
 	@Get("/category/:id/subjects")
 	@SecuredAction(value = "category.read", type = ActionType.RESOURCE)
