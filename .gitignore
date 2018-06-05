@@ -32,6 +32,6 @@ developer.id
 **/temp
 **/dist
 **/.DS_Store
-**/view/*.html
+**/view
 node_modules
 rev-manifest.json
