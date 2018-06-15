@@ -21,7 +21,7 @@
 		<i18n>forum.subjects.empty</i18n>
 	</div>
 	<div class="twelve cell">
-		<resource-right name="publish" resource="category" class="contextual-buttons row">
+		<resource-right name="contrib" resource="category" class="contextual-buttons row">
 			<button class="right-magnet" ng-click="createSubject()"><i18n>forum.subject.new</i18n></button>
 		</resource-right>
 	</div>
@@ -31,10 +31,10 @@
 	<div class="twelve cell">
 		<button class="cell" ng-click="backToCategory()">&lt;</button>
 		<h2 class="cell">[[current.subject.title]]</h2>
-		<resource-right name="publish" resource="category">
+		<resource-right name="manage" resource="current.subject">
 			<button class="right-magnet" ng-click="confirmDeleteSubject()"><i18n>remove</i18n></button>
 			<button class="right-magnet" ng-click="editSubject()"><i18n>edit</i18n></button>
-			<button class="right-magnet" ng-if="!current.subject.locked"ng-click="lockSubject()"><i18n>lock</i18n></button>
+			<button class="right-magnet" ng-if="!current.subject.locked" ng-click="lockSubject()"><i18n>lock</i18n></button>
 			<button class="right-magnet" ng-if="current.subject.locked" ng-click="unlockSubject()"><i18n>unlock</i18n></button>
 		</resource-right>
 	</div>
@@ -53,25 +53,32 @@
 				<div class="six cell">
 					<strong><a ng-click="viewAuthor(message)">[[message.owner.displayName]]</a></strong>, le <span class="small-text">[[formatDateShort(message.created.$date)]]</span>
 				</div>
-				<resource-right name="publish" resource="current.subject" class="contextual-buttons right-magnet small-text">
-					&nbsp;<i18n>forum.or</i18n>&nbsp;
-					<a ng-click="confirmDeleteMessage(message)">
-						<i18n>forum.remove</i18n>
-					</a>
+                <resource-right name="manage" resource="current.subject" class="contextual-buttons right-magnet small-text">
+                    &nbsp;<i18n>forum.or</i18n>&nbsp;
+                    <a ng-click="confirmDeleteMessage(message)">
+                        <i18n>forum.remove</i18n>
+                    </a>
 				</resource-right>
-				<div class="contextual-buttons right-magnet small-text">
-					<!-- Moderators can edit all messages. Owner can edit his message only if the subject is not locked -->
-					<resource-right name="publish" resource="current.subject" >
+                <div class="contextual-buttons right-magnet small-text">
+					<resource-right name="manage" resource="current.subject">
 						<a ng-click="editMessage(message)">
 							<i18n>forum.edit</i18n>
 						</a>
 					</resource-right>
-					<span ng-if="ownerCanEditMessage(message) === true">
+                </div>
+                <resource-right name="contrib" resource="current.subject" class="contextual-buttons right-magnet small-text" ng-if="ownerCanDeleteMessage(message) === true">
+                    &nbsp;<i18n>forum.or</i18n>&nbsp;
+                    <a ng-click="confirmDeleteMessage(message)">
+                        <i18n>forum.remove</i18n>
+                    </a>
+                </resource-right>
+                <div class="contextual-buttons right-magnet small-text">
+                    <resource-right name="contrib" resource="current.subject" ng-if="ownerCanEditMessage(message) === true">
 						<a ng-click="editMessage(message)">
 							<i18n>forum.edit</i18n>
 						</a>
-					</span>
-				</div>
+                    </resource-right>
+                </div>
 			</div>
 			<p bind-html="message.content"></p>
 		</article>
