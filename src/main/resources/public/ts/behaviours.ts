@@ -349,7 +349,7 @@ Behaviours.register('forum', {
 				resolve(this.resources);
 			}.bind(this));
 		})
-		
+
 	},
 
     sniplets : {
@@ -573,13 +573,19 @@ Behaviours.register('forum', {
 				},
 
 				ownerCanEditMessage : function(message) {
-					// only the last message can be edited
 					return (!message.subject.myRights.publish &&
-							!message.subject.category.myRights.publish &&
-							!message.subject.locked &&
-							model.me.userId === message.owner.userId &&
-							message.subject.messages.all[message.subject.messages.all.length-1] === message
-							);
+						!message.subject.category.myRights.publish &&
+						!message.subject.locked &&
+						model.me.userId === message.owner.userId
+					);
+				},
+
+                ownerCanDeleteMessage : function(message) {
+                    return (!message.subject.myRights.publish &&
+						!message.subject.category.myRights.publish &&
+						!message.subject.locked &&
+						model.me.userId === message.owner.userId
+					);
 				},
 
 				autoCreateSnipletCategory : function() {
