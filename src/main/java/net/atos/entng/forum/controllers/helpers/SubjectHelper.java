@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import fr.wseduc.webutils.I18n;
 import net.atos.entng.forum.services.CategoryService;
 import net.atos.entng.forum.services.SubjectService;
 
@@ -125,8 +126,23 @@ public class SubjectHelper extends ExtractorHelper {
 								public void handle(Either<String, JsonObject> event) {
 									if (event.isRight()) {
 										if (event.right().getValue() != null && event.right().getValue().size() > 0) {
-											notifyTimeline(request, user, body, event.right().getValue().getString("_id"), NEW_SUBJECT_EVENT_TYPE);
-											renderJson(request, event.right().getValue(), 200);
+										    categoryService.retrieve(body.getString("category"), user, categoryEvt -> {
+                                                if (categoryEvt.isRight()) {
+                                                    JsonObject category = categoryEvt.right().getValue();
+                                                    JsonObject params = body;
+                                                    JsonObject pushNotif = new JsonObject()
+                                                            .put("title", I18n.getInstance().translate(
+                                                                    "forum.push.notif.subject.new.title",
+                                                                    getHost(request),
+                                                                    I18n.acceptLanguage(request),
+                                                                    category.getString("name")))
+                                                            .put("body", body.getString("title")
+                                                            );
+                                                    params.put("pushNotif", pushNotif);
+                                                    notifyTimeline(request, user, params, event.right().getValue().getString("_id"), NEW_SUBJECT_EVENT_TYPE);
+                                                }
+                                                renderJson(request, event.right().getValue(), 200);
+                                            });
 										}
 									} else {
 										JsonObject error = new JsonObject().put("error", event.left().getValue());
@@ -308,12 +324,13 @@ public class SubjectHelper extends ExtractorHelper {
 			notificationName = "forum.subject-updated";
 		}
 
-		JsonObject params = new JsonObject()
-			.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
-			.put("username", user.getUsername())
-			.put("subject", subject.getString("title"))
-			.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId);
-		params.put("resourceUri", params.getString("subjectUri"));
+        JsonObject params = new JsonObject()
+                .put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+                .put("username", user.getUsername())
+                .put("subject", subject.getString("title"))
+                .put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
+                .put("pushNotif", subject.getJsonObject("pushNotif"));
+        params.put("resourceUri", params.getString("subjectUri"));
 
 		if (subjectId != null && !subjectId.isEmpty()) {
 			notification.notifyTimeline(request, notificationName, user, recipients, categoryId, params);

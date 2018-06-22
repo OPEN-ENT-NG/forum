@@ -27,6 +27,7 @@ import static org.entcore.common.user.UserUtils.getUserInfos;
 import java.util.List;
 import java.util.Map;
 
+import fr.wseduc.webutils.I18n;
 import net.atos.entng.forum.services.CategoryService;
 
 import org.entcore.common.mongodb.MongoDbControllerHelper;
@@ -131,6 +132,7 @@ public class CategoryHelper extends MongoDbControllerHelper {
 	}
 
 	public void shareSubmit(final HttpServerRequest request) {
+	    request.pause();
 		getUserInfos(eb, request, new Handler<UserInfos>() {
 			@Override
 			public void handle(final UserInfos user) {
@@ -144,7 +146,24 @@ public class CategoryHelper extends MongoDbControllerHelper {
 					.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
 					.put("username", user.getUsername())
 					.put("resourceUri", pathPrefix + "#/view/" + categoryId);
-					shareJsonSubmit(request, "forum.category-shared", false, params, "name");
+					categoryService.retrieve(categoryId, user, event -> {
+                        request.resume();
+                        if (event.isRight()) {
+                            JsonObject category = event.right().getValue();
+                            JsonObject pushNotif = new JsonObject()
+                                    .put("title", "timeline.push.notif.category.shared")
+                                    .put("body", I18n.getInstance().translate(
+                                            "forum.push.notif.category.shared",
+                                            getHost(request),
+                                            I18n.acceptLanguage(request),
+                                            user.getUsername(),
+                                            category.getString("name")));
+                            params.put("pushNotif", pushNotif);
+                            shareJsonSubmit(request, "forum.category-shared", false, params, "name");
+                        } else {
+                            renderError(request);
+                        }
+                    });
 				} else {
 					unauthorized(request);
 				}
