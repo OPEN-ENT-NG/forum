@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import fr.wseduc.webutils.I18n;
 import net.atos.entng.forum.services.MessageService;
 import net.atos.entng.forum.services.SubjectService;
 
@@ -264,6 +265,15 @@ public class MessageHelper extends ExtractorHelper {
 										.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
 										.put("overview", overview);
 									params.put("resourceUri", params.getString("subjectUri"));
+
+                                    JsonObject pushNotif = new JsonObject()
+                                            .put("title", I18n.getInstance().translate("forum.push.notif.message.new.title",
+                                                    getHost(request),
+                                                    I18n.acceptLanguage(request),
+                                                    subject.getJsonObject("result").getString("title")))
+                                            .put("body", message.getString("contentPlain").substring(0, Math.min(message.getString("contentPlain").length(), 50)));
+
+                                    params.put("pushNotif", pushNotif);
 									if (subjectId != null && !subjectId.trim().isEmpty()) {
 										notification.notifyTimeline(request, notificationName, user, ids, subjectId, params);
 									}
