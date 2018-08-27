@@ -65,6 +65,7 @@
     "forum.sniplet.auto.category.title": "Forum du site {0}",
     "forum.sniplet.auto.subject.title": "Règles d'utilisation du forum",
     "forum.sniplet.auto.first.message": "<h1>Bienvenue dans le forum du site {0}</h1><p>Merci de rester poli(e) dans les échanges sur le forum</p>",
+    "forum.user.answer": "Ma réponse",
     "group.HeadTeacher": "Professeurs principaux de {0}.",
     "group.Func": "Personnels de fonction {0}.",
     "group.Discipline": "Enseignants de discipline {0}.",
