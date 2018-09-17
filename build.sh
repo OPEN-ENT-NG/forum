@@ -5,35 +5,40 @@ then
   mkdir node_modules
 fi
 
-case `uname -s` in
-  MINGW*)
-    USER_UID=1000
-    GROUP_UID=1000
+if [ -z ${USER_UID:+x} ]
+then
+  export USER_UID=1000
+  export GROUP_GID=1000
+fi
+
+# options
+SPRINGBOARD="recette"
+for i in "$@"
+do
+case $i in
+    -s=*|--springboard=*)
+    SPRINGBOARD="${i#*=}"
+    shift
     ;;
-  *)
-    if [ -z ${USER_UID:+x} ]
-    then
-      USER_UID=`id -u`
-      GROUP_GID=`id -g`
-    fi
+    *)
+    ;;
 esac
+done
 
 clean () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle clean
 }
 
 buildNode () {
-  case `uname -s` in
-    MINGW*)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && npm update entcore && node_modules/gulp/bin/gulp.js build"
-      ;;
-    *)
-      docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm update entcore && node_modules/gulp/bin/gulp.js build"
-  esac
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm update entcore && node_modules/gulp/bin/gulp.js build"
 }
 
 buildGradle () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle shadowJar install publishToMavenLocal
+}
+
+watch () {
+  docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js watch --springboard=/home/node/$SPRINGBOARD"
 }
 
 publish () {
@@ -62,6 +67,9 @@ do
     install)
       buildNode && buildGradle
       ;;
+    watch)
+      watch
+      ;;
     publish)
       publish
       ;;
@@ -72,4 +80,3 @@ do
     exit 1
   fi
 done
-
