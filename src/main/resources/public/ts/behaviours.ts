@@ -357,18 +357,17 @@ Behaviours.register('forum', {
             title : 'Forum',
             description : 'Catégorie de forum dédiée',
             controller : {
-                initSource: function () {
+                initSource: async function () {
                     this.searchCategory = {};
-                    Behaviours.applicationsBehaviours.forum.loadResources(function (resources) {
-                        var $scope = this;
-                        this.categories = _.map(resources, function(category){
-                            category.matchSearch = function () {
-                                return this.name.toLowerCase().indexOf(($scope.searchCategory.searchText || '').toLowerCase()) !== -1
-                            }
-                            return category;
-                        });
-                        this.$apply('categories');
-                    }.bind(this));
+                    var resources = await Behaviours.applicationsBehaviours.forum.loadResources();
+					var $scope = this;
+					this.categories = _.map(resources, function(category){
+						category.matchSearch = function () {
+							return this.name.toLowerCase().indexOf(($scope.searchCategory.searchText || '').toLowerCase()) !== -1
+						}
+						return category;
+					});
+                    this.$apply('categories');
                 },
             	search: function(category){
             	    return category.matchSearch();
