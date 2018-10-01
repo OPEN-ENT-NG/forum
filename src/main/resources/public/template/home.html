@@ -18,7 +18,7 @@
                     <resource-right name="contrib" resource="cat">
                         <input type="checkbox" class="cell" ng-hide="getSelectedSubjects().length > 0" ng-model="cat.selected" ng-change="hideAlmostAllButtons(cat)"/>
                     </resource-right>
-                    <h1 class="eight cell">[[cat.name]]</h1>
+                    <h1 class="eight cell fixed" style="left: 50px">[[cat.name]]</h1>
                     <a class="right-magnet" ng-if="cat.subjects.length() > 1 && cat.limitSubjects > maxSubjects"
                        ng-click="cat.limitSubjects = maxSubjects" >
                         <i18n>forum.hide.subjects</i18n>
