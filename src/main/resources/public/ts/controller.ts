@@ -135,6 +135,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 
 	$scope.openMainPage = function(){
 		delete $scope.category;
+		$scope.categories.deselectAll();
         template.open('main', 'home');
 	};
 

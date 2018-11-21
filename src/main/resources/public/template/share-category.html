@@ -5,6 +5,6 @@
 		<i18n>forum.the.category</i18n> [[category.name]] <i18n>forum.has.been.created</i18n> 
 		<i18n>forum.you.can.share.this.category</i18n>
 	</p>
-	<share-panel app-prefix="'forum'" resources="category"></share-panel>
-	<input type="button" class="right-magnet" i18n-value="forum.category.edit.finish" ng-click="closeEditCategory()" />
+	<share-panel app-prefix="'forum'" resources="category" on-submit="openMainPage()"></share-panel>
+	<input type="button" class="left-magnet" i18n-value="forum.category.share.return" ng-click="openMainPage()" />
 </div>
