@@ -44,7 +44,7 @@ public class Forum extends BaseServer {
 	public void start() throws Exception {
 		super.start();
 		// Subscribe to events published for transition
-		setRepositoryEvents(new ForumRepositoryEvents());
+		setRepositoryEvents(new ForumRepositoryEvents(vertx));
 
 		if (config.getBoolean("searching-event", true)) {
 			setSearchingEvents(new ForumSearchingEvents());
