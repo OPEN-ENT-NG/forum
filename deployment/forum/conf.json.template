@@ -6,6 +6,7 @@
   		  "app-name" : "Forum",
   		  "app-address" : "/forum",
   		  "app-icon" : "forum-large",
+          "app-type" : "END_USER",
   		  "host": "${host}",
   		  "ssl" : $ssl,
   		  "auto-redeploy": false,
