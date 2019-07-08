@@ -175,23 +175,29 @@ public class CategoryHelper extends MongoDbControllerHelper {
 	}
 
 	public void shareResource(final HttpServerRequest request) {
-		UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-			@Override
-			public void handle(final UserInfos user) {
-				if (user != null) {
-					final String id = request.params().get("id");
-					if(id == null || id.trim().isEmpty()) {
-						badRequest(request, "invalid.id");
-						return;
-					}
-
-					JsonObject params = new JsonObject()
+		request.pause();
+		UserUtils.getUserInfos(eb, request, user -> {
+			if (user != null) {
+				final String id = request.params().get("id");
+				if(id == null || id.trim().isEmpty()) {
+					badRequest(request, "invalid.id");
+					return;
+				}
+				categoryService.retrieve(id, user, event -> {
+                    request.resume();
+                    if (event.isRight()) {
+                        JsonObject category = event.right().getValue();
+						JsonObject params = new JsonObject()
 							.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
 							.put("username", user.getUsername())
+							.put("resourceName", category.getString("name"))
+							.put("categoryName", category.getString("name"))
 							.put("resourceUri", pathPrefix + "#/view/" + id);
-
-					shareResource(request, "pages.shared", false, params, "title");
-				}
+						shareResource(request, "forum.category-shared", false, params, "title");
+					} else {
+						renderError(request);
+					}
+				});
 			}
 		});
 	}
