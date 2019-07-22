@@ -22,11 +22,11 @@ package net.atos.entng.forum.controllers.helpers;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.wseduc.webutils.I18n;
+import net.atos.entng.forum.services.CategoryService;
 import net.atos.entng.forum.services.MessageService;
 import net.atos.entng.forum.services.SubjectService;
 
@@ -35,6 +35,8 @@ import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
+import org.entcore.common.user.UserUtils;
+import org.entcore.common.utils.StringUtils;
 import org.vertx.java.core.http.RouteMatcher;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -56,12 +58,14 @@ public class MessageHelper extends ExtractorHelper {
 
 	private final MessageService messageService;
 	private final SubjectService subjectService;
+	private final CategoryService categoryService;
 
 	protected TimelineHelper notification;
 
-	public MessageHelper(final MessageService messageService, final SubjectService subjectService) {
+	public MessageHelper(final MessageService messageService, final SubjectService subjectService, final CategoryService categoryService) {
 		this.messageService = messageService;
 		this.subjectService = subjectService;
+		this.categoryService = categoryService;
 	}
 
 	@Override
@@ -221,61 +225,61 @@ public class MessageHelper extends ExtractorHelper {
 			public void handle(Either<String, JsonObject> event) {
 				if (event.isRight()) {
 					final JsonObject subject = event.right().getValue();
-					messageService.getContributors(categoryId, subjectId, user, new Handler<Either<String, JsonArray>>() {
+					categoryService.getOwnerAndShared(categoryId, user, new Handler<Either<String, JsonObject>>() {
 						@Override
-						public void handle(Either<String, JsonArray> event) {
-							final List<String> ids = new ArrayList<String>();
+						public void handle(Either<String, JsonObject> event) {
 							if (event.isRight()) {
-								// get all owners
-								JsonArray owners = event.right().getValue();
-								if (owners.size() > 0) {
-									String id = null;
-									// Extract owners
-									for(int i=0; i<owners.size(); i++){
-										id = ((JsonObject) owners.getJsonObject(i)).getString("userId");
-										if(!id.equals(user.getUserId()) && !ids.contains(id)){
-											ids.add(id);
-										}
-									}
-									String notificationName = null;
-									if (eventType == NEW_MESSAGE_EVENT_TYPE) {
-										notificationName = "forum.message-created";
-									}
-									else {
-										if(eventType == UPDATE_MESSAGE_EVENT_TYPE){
-											notificationName = "forum.message-updated";
-										}
-									}
-									String overview = message.getString("content");
-									if(overview.contains("</p>")){
-										overview = overview.split("</p>")[0];
-										overview = overview.replaceAll("<br>", "");
-									}
-									else{
-										overview = "<p>".concat(overview);
-									}
-									if(overview.length() > OVERVIEW_LENGTH){
-										overview = overview.substring(0, OVERVIEW_LENGTH);
-										overview = overview.concat(" ... </p>");
-									}
-									JsonObject params = new JsonObject()
-										.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
-										.put("username", user.getUsername())
-										.put("subject", subject.getJsonObject("result").getString("title"))
-										.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
-										.put("overview", overview);
-									params.put("resourceUri", params.getString("subjectUri"));
+								final JsonObject result = event.right().getValue();
+								if(result != null) {
+									final String ownerId = result.getJsonObject("owner", new JsonObject()).getString("userId");
+									final JsonArray shared = result.getJsonArray("shared", new JsonArray());
 
-                                    JsonObject pushNotif = new JsonObject()
-                                            .put("title", I18n.getInstance().translate("forum.push.notif.message.new.title",
-                                                    getHost(request),
-                                                    I18n.acceptLanguage(request),
-                                                    subject.getJsonObject("result").getString("title")))
-                                            .put("body", message.getString("contentPlain").substring(0, Math.min(message.getString("contentPlain").length(), 50)));
+									final Set<String> recipients = new HashSet<String>();
 
-                                    params.put("pushNotif", pushNotif);
-									if (subjectId != null && !subjectId.trim().isEmpty()) {
-										notification.notifyTimeline(request, notificationName, user, ids, subjectId, params);
+									if(ownerId != null && !ownerId.isEmpty() && !user.getUserId().equals(ownerId)) {
+										recipients.add(ownerId);
+									}
+
+									if(shared != null && shared.size() > 0) {
+										final AtomicInteger remaining = new AtomicInteger(shared.size());
+
+										for(int i=0; i<shared.size(); i++){
+											final JsonObject jo = shared.getJsonObject(i);
+											if (jo.containsKey("userId")) {
+												if(!user.getUserId().equals(jo.getString("userId"))) {
+													recipients.add(jo.getString("userId"));
+												}
+												remaining.getAndDecrement();
+											} else if(jo.containsKey("groupId")) {
+												final String groupId = jo.getString("groupId");
+												if (groupId != null) {
+													// Get users' ids of the group (exclude current userId)
+													UserUtils.findUsersInProfilsGroups(groupId, eb, user.getUserId(), false, new Handler<JsonArray>() {
+														@Override
+														public void handle(JsonArray event) {
+															if (event != null) {
+																for (Object o : event) {
+																	if (!(o instanceof JsonObject)) continue;
+																	final String userId = ((JsonObject) o).getString("id");
+																	if(!user.getUserId().equals(userId)){
+																		recipients.add(userId);
+																	}
+																}
+															}
+															if (remaining.decrementAndGet() == 0 && !recipients.isEmpty()) {
+																sendNotify(request, new ArrayList<>(recipients), user, message, subject, subjectId, categoryId, eventType);
+															}
+														}
+													});
+												}
+											}
+										}
+
+										if (remaining.get() == 0 && !recipients.isEmpty()) {
+											sendNotify(request, new ArrayList<>(recipients), user, message, subject, subjectId, categoryId, eventType);
+										}
+									} else if (!recipients.isEmpty()) {
+										sendNotify(request, new ArrayList<>(recipients), user, message, subject, subjectId, categoryId, eventType);
 									}
 								}
 							}
@@ -284,5 +288,50 @@ public class MessageHelper extends ExtractorHelper {
 				}
 			}
 		});
+	}
+
+	private void sendNotify(final HttpServerRequest request, final List<String> recipients, final UserInfos user,
+							final JsonObject message, final JsonObject subject, final String subjectId, final String categoryId, final String eventType){
+
+		String notificationName = "forum.message-created";
+		if(UPDATE_MESSAGE_EVENT_TYPE.equals(eventType)) {
+			notificationName = "forum.message-updated";
+		}
+
+		String overview = message.getString("content");
+		if(overview.contains("</p>")){
+			overview = overview.split("</p>")[0];
+			overview = overview.replaceAll("<br>", "");
+		}
+		else{
+			overview = "<p>".concat(overview);
+		}
+		if(overview.length() > OVERVIEW_LENGTH){
+			overview = overview.substring(0, OVERVIEW_LENGTH);
+			overview = overview.concat(" ... </p>");
+		}
+		JsonObject params = new JsonObject()
+				.put("profilUri", "/userbook/annuaire#" + user.getUserId() + "#" + user.getType())
+				.put("username", user.getUsername())
+				.put("subject", subject.getJsonObject("result").getString("title"))
+				.put("subjectUri", pathPrefix + "#/view/" + categoryId + "/" + subjectId)
+				.put("overview", overview);
+		params.put("resourceUri", params.getString("subjectUri"));
+
+		if (!message.containsKey("contentPlain")) {
+			message.put("contentPlain", StringUtils.stripHtmlTag(message.getString("content", "")));
+		}
+
+		JsonObject pushNotif = new JsonObject()
+				.put("title", I18n.getInstance().translate("forum.push.notif.message.new.title",
+						getHost(request),
+						I18n.acceptLanguage(request),
+						subject.getJsonObject("result").getString("title")))
+				.put("body", message.getString("contentPlain").substring(0, Math.min(message.getString("contentPlain").length(), 50)));
+
+		params.put("pushNotif", pushNotif);
+		if (subjectId != null && !subjectId.trim().isEmpty()) {
+			notification.notifyTimeline(request, notificationName, user, recipients, subjectId, params);
+		}
 	}
 }

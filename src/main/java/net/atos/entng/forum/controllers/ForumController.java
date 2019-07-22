@@ -55,7 +55,7 @@ public class ForumController extends BaseController {
 
 		this.categoryHelper = new CategoryHelper(collection, categoryService);
 		this.subjectHelper = new SubjectHelper(subjectService, categoryService);
-		this.messageHelper = new MessageHelper(messageService, subjectService);
+		this.messageHelper = new MessageHelper(messageService, subjectService, categoryService);
 	}
 
 		@Override
