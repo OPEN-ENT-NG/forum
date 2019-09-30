@@ -60,7 +60,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	}
 
 	@Override
-	public void exportResources(String exportId, String userId, JsonArray g, String exportPath, String locale,
+	public void exportResources(JsonArray resourcesIds, String exportId, String userId, JsonArray g, String exportPath, String locale,
 								String host, Handler<Boolean> handler)
 	{
 			QueryBuilder findByOwner = QueryBuilder.start("owner.userId").is(userId);
@@ -70,7 +70,18 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 					QueryBuilder.start("shared.groupId").in(g).get()
 			);
 			QueryBuilder findByAuthorOrOwnerOrShared = QueryBuilder.start().or(findByOwner.get(),findByShared.get());
-			final JsonObject query = MongoQueryBuilder.build(findByAuthorOrOwnerOrShared);
+
+			JsonObject query;
+
+			if(resourcesIds == null)
+				query = MongoQueryBuilder.build(findByAuthorOrOwnerOrShared);
+			else
+			{
+				QueryBuilder limitToResources = findByAuthorOrOwnerOrShared.and(
+					QueryBuilder.start("_id").in(resourcesIds).get()
+				);
+				query = MongoQueryBuilder.build(limitToResources);
+			}
 
 			final AtomicBoolean exported = new AtomicBoolean(false);
 
