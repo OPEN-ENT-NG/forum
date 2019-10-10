@@ -46,6 +46,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -57,6 +58,9 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 
 	public ForumRepositoryEvents(Vertx vertx) {
 		super(vertx);
+
+		this.collectionNameToImportPrefixMap.put(Forum.CATEGORY_COLLECTION, "cat_");
+		this.collectionNameToImportPrefixMap.put(Forum.SUBJECT_COLLECTION, "sub_");
 	}
 
 	@Override
@@ -85,6 +89,8 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 
 			final AtomicBoolean exported = new AtomicBoolean(false);
 
+			Map<String, String> prefixMap = this.collectionNameToImportPrefixMap;
+
 			mongo.find(Forum.CATEGORY_COLLECTION, query, new Handler<Message<JsonObject>>()
 			{
 				@Override
@@ -96,7 +102,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 						results.forEach(elem ->
 						{
 							JsonObject cat = ((JsonObject) elem);
-							cat.put("name", "cat_" + cat.getString("name"));
+							cat.put("name", prefixMap.get(Forum.CATEGORY_COLLECTION) + cat.getString("name"));
 						});
 
 						final Set<String> ids = results.stream().map(res -> ((JsonObject)res).getString("_id")).collect(Collectors.toSet());
@@ -113,8 +119,8 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 								{
 									results2.forEach(elem ->
 									{
-										JsonObject cat = ((JsonObject) elem);
-										cat.put("title", "sub_" + cat.getString("title"));
+										JsonObject sub = ((JsonObject) elem);
+										sub.put("title", prefixMap.get(Forum.SUBJECT_COLLECTION) + sub.getString("title"));
 									});
 
 									createExportDirectory(exportPath, locale, new Handler<String>()
