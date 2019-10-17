@@ -94,5 +94,6 @@
     "forum.push.notif.category.shared" : "{0} a partagé avec vous la catégorie {1}",
     "forum.push.notif.subject.new.title": "Forum: Nouveau sujet dans la catégorie {0}",
     "forum.push.notif.message.new.title": "Forum: Nouveau message dans le sujet {0}",
-    "forum.category.share.return": "Retour"
+    "forum.category.share.return": "Retour",
+    "print": "Imprimer"
 }

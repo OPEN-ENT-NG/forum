@@ -1,8 +1,10 @@
-import {routes, model, Behaviours, ng, template, moment, $, _ } from 'entcore';
+import {routes, model, Behaviours, ng, template, moment, $, _, skin} from 'entcore';
+import * as jQuery from 'jquery';
+import http from "axios";
 
 export let forumController = ng.controller('ForumController', ['$scope', 'model', 'route',
 	function ($scope, model, route){
-	let Message = Behaviours.applicationsBehaviours.forum.namespace.Message
+	let Message = Behaviours.applicationsBehaviours.forum.namespace.Message;
 	$scope.notFound = false;
 
 	$scope.template = template;
@@ -14,7 +16,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 	$scope.display = {};
 	$scope.editedMessage = new Message();
 
-    $scope.maxSubjects = 3
+    $scope.maxSubjects = 3;
 
 	// Definition of actions
 	route({
@@ -71,8 +73,79 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		},
 		mainPage: function(){
             template.open('main', 'home');
+		},
+		print: function (params) {
+			$scope.getCategory = http.get('/forum/category/'+params.categoryId);
+			$scope.getSubjects = http.get('/forum/category/'+params.categoryId+'/subjects');
+			Promise.all([$scope.getCategory,$scope.getSubjects]).then(function(values) {
+				$scope.category = values[0].data;
+				$scope.subjects = values[1].data;
+				if (params.subjectId) {
+					$scope.subjects = $scope.subjects.filter(p => p._id === params.subjectId);
+				}
+				let getMessages = [];
+				$scope.subjects.forEach(function (subject) {
+					getMessages.push(http.get('/forum/category/' + params.categoryId + '/subject/' + subject._id + '/messages'));
+				});
+				Promise.all(getMessages).then(function (messages) {
+					let i = 0;
+					$scope.subjects.forEach(function (subject) {
+						subject.messages = messages[i].data;
+						i++;
+					});
+					let countDown = $scope.subjects.length;
+					let onFinish = function () {
+						if (--countDown <= 0) {
+							setTimeout(() => {
+								const imgs = (jQuery as any).jQuery(document).find("img").toArray();
+								for (let img of imgs) {
+									(img as any).onerror = (() => {
+										(img as any).error = true;
+									})
+								}
+								const isComplete = (img) => {
+									return img.complete || (img.context && img.context.complete)
+								};
+								$scope.printed = false;
+								const it = setInterval(() => {
+									const pending = imgs.filter(img => !(img as any).error && !isComplete(img));
+									if (pending.length == 0) {
+										clearInterval(it);
+										if (!$scope.printed) {
+											$scope.printed = true;
+											window.print()
+										}
+									}
+								}, 200)
+							}, 2000)
+						}
+					};
+					if (countDown === 0) {
+						onFinish();
+					}
+					$scope.subjects.forEach(async function (subject) {
+						onFinish();
+					})
+				});
+			});
 		}
 	});
+
+	$scope.print = function (category) {
+		window.open(`/forum/print/forum#/print/${category._id}`, '_blank');
+	};
+
+	$scope.printSubject = function(subject) {
+		window.open(`/forum/print/forum#/print/${subject.category._id}/subject/${subject._id}`, '_blank');
+	};
+
+	$scope.replaceAudioVideo = function (s: string) {
+		return s &&
+			// Audio
+			s.replace(/<div class=\"audio-wrapper.*?\/div>/g,"<img src='" + skin.basePath + "img/illustrations/audio-file.png' width='300' height='72'>")
+			// Video
+				.replace(/<iframe.*?src="(.+?)[\?|\"].*?\/iframe>/g,"<img src='" + skin.basePath + "img/icons/video-large.png' width='135' height='135'><br><a href=\"$1\">$1</a>");
+	};
 
 	$scope.switchAllSubjects = function(){
 		if($scope.display.selectSubjects){
