@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Forum</title>
+    <script src="/forum/public/dist/entcore/ng-app.js" id="context"  type="text/javascript"></script>
+    <script src="/forum/public/dist/application.js" type="text/javascript"></script>
+</head>
+<body ng-controller="ForumController">
+<portal-styles></portal-styles>
+<div ng-repeat="subject in subjects">
+    <div class="row">
+        <app-title>
+            <h1>
+                <i class="forum"></i>
+                <span><i18n>forum.title</i18n></span><span class="zero-mobile"> / </span>
+                <span subtitle>
+                    <span class="subtitle-item">[[category.name]]</span> /
+                    <span class="subtitle-item" >[[subject.title]]</span>
+                </span>
+            </h1>
+        </app-title>
+    </div>
+
+    <section>
+        <div ng-repeat="message in subject.messages | orderBy: 'created.$date'" class="bubble-container alternate-container">
+            <div class="row vertical-spacing"></div>
+            <div class="row rigid-grid">
+                <div class="two cell centered-text twelve-mobile whose-bubble">
+                    <div>
+                        <strong>[[message.owner.displayName]]</strong>
+                    </div>
+                    <div>
+                        <em class="small-text">[[formatDateFromNow(message.created.$date)]]</em>
+                    </div>
+                    <div class="image">
+                        <img ng-src="/userbook/avatar/[[message.owner.userId]]?thumbnail=100x100" />
+                    </div>
+                </div>
+                <article class="margin-two bubble" ng-init="disableResizableElement = true">
+                    <p bind-html="message.content"></p>
+                </article>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+</body>
+</html>

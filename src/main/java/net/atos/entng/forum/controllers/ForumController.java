@@ -77,6 +77,12 @@ public class ForumController extends BaseController {
 		eventStore.createAndStoreEvent(ForumEvent.ACCESS.name(), request);
 	}
 
+	@Get("/print/forum")
+	@ApiDoc("Print category by id")
+	public void print(HttpServerRequest request) {
+		renderView(request, new JsonObject().put("printCategoryId", request.params().get("forum")), "print.html", null);
+	}
+
 	@Get("/categories")
 	@SecuredAction("forum.list")
 	public void listCategories(HttpServerRequest request) {

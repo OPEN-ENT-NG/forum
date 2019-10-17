@@ -138,7 +138,7 @@
 	                    http().delete('/forum/category/' + category._id + '/subject/' + item._id).done(function () {
 	                        counter = counter - 1;
 	                        if (counter === 0) {
-	                            Collection.prototype.removeSelection.call(this);
+	                            entcore_1.Collection.prototype.removeSelection.call(this);
 	                            category.subjects.sync();
 	                            if (typeof callback === 'function') {
 	                                callback();
@@ -406,17 +406,27 @@
 	            description: 'Catégorie de forum dédiée',
 	            controller: {
 	                initSource: function () {
-	                    this.searchCategory = {};
-	                    Behaviours.applicationsBehaviours.forum.loadResources(function (resources) {
-	                        var $scope = this;
-	                        this.categories = _.map(resources, function (category) {
-	                            category.matchSearch = function () {
-	                                return this.name.toLowerCase().indexOf(($scope.searchCategory.searchText || '').toLowerCase()) !== -1;
-	                            };
-	                            return category;
+	                    return __awaiter(this, void 0, void 0, function () {
+	                        var resources, $scope;
+	                        return __generator(this, function (_a) {
+	                            switch (_a.label) {
+	                                case 0:
+	                                    this.searchCategory = {};
+	                                    return [4 /*yield*/, Behaviours.applicationsBehaviours.forum.loadResources()];
+	                                case 1:
+	                                    resources = _a.sent();
+	                                    $scope = this;
+	                                    this.categories = _.map(resources, function (category) {
+	                                        category.matchSearch = function () {
+	                                            return this.name.toLowerCase().indexOf(($scope.searchCategory.searchText || '').toLowerCase()) !== -1;
+	                                        };
+	                                        return category;
+	                                    });
+	                                    this.$apply('categories');
+	                                    return [2 /*return*/];
+	                            }
 	                        });
-	                        this.$apply('categories');
-	                    }.bind(this));
+	                    });
 	                },
 	                search: function (category) {
 	                    return category.matchSearch();
@@ -591,12 +601,16 @@
 	                    return true;
 	                },
 	                ownerCanEditMessage: function (message) {
-	                    // only the last message can be edited
 	                    return (!message.subject.myRights.publish &&
 	                        !message.subject.category.myRights.publish &&
 	                        !message.subject.locked &&
-	                        model.me.userId === message.owner.userId &&
-	                        message.subject.messages.all[message.subject.messages.all.length - 1] === message);
+	                        model.me.userId === message.owner.userId);
+	                },
+	                ownerCanDeleteMessage: function (message) {
+	                    return (!message.subject.myRights.publish &&
+	                        !message.subject.category.myRights.publish &&
+	                        !message.subject.locked &&
+	                        model.me.userId === message.owner.userId);
 	                },
 	                autoCreateSnipletCategory: function () {
 	                    var scope = this;

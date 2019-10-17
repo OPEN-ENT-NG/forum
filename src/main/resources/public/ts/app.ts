@@ -10,6 +10,12 @@ routes.define(function($routeProvider){
         .when('/view/:categoryId/:subjectId', {
             action: 'goToSubject'
         })
+		.when('/print/:categoryId', {
+			action: 'print'
+		})
+		.when('/print/:categoryId/subject/:subjectId', {
+			action: 'print'
+		})
         .otherwise({
             action: 'mainPage'
         });
