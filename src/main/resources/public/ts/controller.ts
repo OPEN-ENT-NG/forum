@@ -116,8 +116,8 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 											window.print()
 										}
 									}
-								}, 100)
-							}, 1000)
+								}, 200)
+							}, 2000)
 						}
 					};
 					if (countDown === 0) {
