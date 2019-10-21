@@ -15,8 +15,8 @@
                     <img ng-src="[[cat.icon]]?thumbnail=120x120" ng-if="cat.icon !== undefined" class="cell" />
                 </div>
                 <div class="content">
-                    <resource-right name="contrib" resource="cat">
-                        <input type="checkbox" class="cell" ng-hide="getSelectedSubjects().length > 0" ng-model="cat.selected" ng-change="hideAlmostAllButtons(cat)"/>
+                    <resource-right ng-class="{'to-hide-but-remain':getSelectedSubjects().length > 0}" name="contrib" resource="cat">
+                        <input type="checkbox" class="cell" ng-model="cat.selected" ng-change="hideAlmostAllButtons(cat)"/>
                     </resource-right>
                     <h1 class="eight cell">[[cat.name]]</h1>
                     <a class="right-magnet" ng-if="cat.subjects.length() > 1 && cat.limitSubjects > maxSubjects"
