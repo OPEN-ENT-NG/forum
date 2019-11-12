@@ -2,19 +2,19 @@
 	<h1><i18n ng-click="openMainPage()">forum.title</i18n></h1>
 </app-title>
 
-<div class="row toggle-buttons-spacer">
+<div class="row toggle-buttons-spacer" guard-root>
 	<h2><i18n>forum.subject.new</i18n></h2>
 	<article class="twelve cell">
 		<label class="twelve cell"><i18n>forum.subject</i18n></label>
 		<input type="text" i18n-placeholder="forum.subject.placeholder" class="twelve cell" ng-model="subject.title" required />
 
 		<label class="twelve cell"><i18n>forum.subject.message</i18n></label>
-		<editor ng-model="editedMessage.content" required></editor>
+		<editor ng-model="editedMessage.content" required input-guard></editor>
 
 		<div class="twelve cell warning" ng-if="subject.error !== undefined" translate content="[[subject.error]]">
 		</div>
 
-		<button class="right-magnet" ng-click="addSubject()"><i18n>submit</i18n></button>
+		<button class="right-magnet" reset-guard="addSubject()"><i18n>submit</i18n></button>
 		<input type="button" class="cancel right-magnet" i18n-value="cancel" ng-click="closeSubject()" />
 	</article>
 </div>

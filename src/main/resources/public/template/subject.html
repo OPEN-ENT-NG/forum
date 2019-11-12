@@ -59,12 +59,12 @@
                 </plus>
     			<p bind-html="message.content"></p>
     		</article>
-    		<article class="margin-two bubble" ng-if="message === editedMessage" ng-init="disableResizableElement = false">
-                    <editor ng-model="editedMessage.content" required></editor>
+    		<article class="margin-two bubble" ng-if="message === editedMessage" ng-init="disableResizableElement = false" guard-root>
+                    <editor ng-model="editedMessage.content" required input-guard></editor>
     			<div class="ten cell warning" ng-if="editedMessage.error !== undefined" translate content="[[editedMessage.error]]">
     			</div>
                 <div class="row">
-        			<button class="right-magnet" ng-mousedown="saveEditMessage()"><i18n>edit</i18n></button>
+        			<button class="right-magnet" reset-guard="saveEditMessage()"><i18n>edit</i18n></button>
         			<input type="button" class="cancel right-magnet" i18n-value="cancel" ng-mousedown="cancelEditMessage()" />
                 </div>
     		</article>
@@ -81,13 +81,13 @@
     				<img ng-src="/userbook/avatar/[[me.userId]]?thumbnail=100x100" />
     			</div>
     		</div>
-            <article class="margin-two bubble">
+            <article class="margin-two bubble" guard-root>
                 <h2> <i18n>forum.user.answer</i18n></h2>
-        		<editor ng-model="newMessage.content" required></editor>
+        		<editor ng-model="newMessage.content" required input-guard></editor>
         		<div class="ten cell warning" ng-if="editedMessage.error !== undefined" translate content="[[editedMessage.error]]">
         		</div>
                 <div class="row">
-                    <button class="right-magnet" ng-click="addMessage(newMessage)" ng-if="!subject.locked"><i18n>forum.reply</i18n></button>
+                    <button class="right-magnet" reset-guard="addMessage(newMessage)" ng-if="!subject.locked"><i18n>forum.reply</i18n></button>
                 </div>
         	</article>
         </div>

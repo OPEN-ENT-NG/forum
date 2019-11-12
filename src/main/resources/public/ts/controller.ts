@@ -220,27 +220,31 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		template.open('main', 'new-subject');
 	};
 
-	$scope.addSubject = function(){
-		if ($scope.isTitleEmpty($scope.subject.title)) {
-			$scope.subject.title = undefined;
-			$scope.subject.error = 'forum.subject.missing.title';
-			return;
-		}
+	$scope.addSubject = function(): Promise<void> {
+		return new Promise<void>(function(resolve, reject) {
+			if ($scope.isTitleEmpty($scope.subject.title)) {
+				$scope.subject.title = undefined;
+				$scope.subject.error = 'forum.subject.missing.title';
+				reject();
+			}
 
-		if ($scope.isTextEmpty($scope.editedMessage.content)) {
-			$scope.subject.error = 'forum.message.empty';
-			return;
-		}
-
-		$scope.subject.error = undefined;
-		$scope.category.addSubject($scope.subject, function(){
-			$scope.subject.addMessage($scope.editedMessage, undefined, function(){ $scope.category.open(); });
-			$scope.messages = $scope.subject.messages;
-			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-			$scope.editedMessage.content = "";
+			if ($scope.isTextEmpty($scope.editedMessage.content)) {
+				$scope.subject.error = 'forum.message.empty';
+				reject();
+			}
+			resolve();
+			$scope.subject.error = undefined;
+			$scope.category.addSubject($scope.subject, function () {
+				$scope.subject.addMessage($scope.editedMessage, undefined, function () {
+					$scope.category.open();
+				});
+				$scope.messages = $scope.subject.messages;
+				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+				$scope.editedMessage.content = "";
+			});
+			//template.open('main', 'read-subject');
+			template.open('main', 'subject');
 		});
-		//template.open('main', 'read-subject');
-        template.open('main', 'subject');
 	};
 
 	$scope.closeSubject = function(){
@@ -264,20 +268,23 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		$scope.display.confirmDeleteSubjects = undefined;
 	};
 
-	$scope.addMessage = function(newMessage){
-		if ($scope.isTextEmpty(newMessage.content)) {
-			$scope.editedMessage.error = 'forum.message.empty';
-			return;
-		}
-		$scope.editedMessage.content = newMessage.content;
-		newMessage.content = "";
-		$scope.editedMessage.error = undefined;
-		$scope.subject.addMessage($scope.editedMessage);
-		setTimeout(function () {
-		    $scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-		    $scope.editedMessage.content = "";
-		    template.open('main', 'subject');
-		}, 0);
+	$scope.addMessage = function(newMessage): Promise<void> {
+		return new Promise<void>(function(resolve, reject) {
+			if ($scope.isTextEmpty(newMessage.content)) {
+				$scope.editedMessage.error = 'forum.message.empty';
+				reject();
+			}
+			$scope.editedMessage.content = newMessage.content;
+			newMessage.content = "";
+			$scope.editedMessage.error = undefined;
+			$scope.subject.addMessage($scope.editedMessage);
+			setTimeout(function () {
+				resolve();
+				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+				$scope.editedMessage.content = "";
+				template.open('main', 'subject');
+			}, 0);
+		});
 	};
 
 	$scope.cancelAddMessage = function(){
@@ -289,15 +296,17 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
         $scope.editedMessage.backupContent = message.content;
 	};
 
-	$scope.saveEditMessage = function(){
-		if ($scope.isTextEmpty($scope.editedMessage.content)) {
-			$scope.editedMessage.error = 'forum.message.empty';
-			return;
-		}
-
-		$scope.editedMessage.error = undefined;
-		$scope.editedMessage.save();
-		$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+	$scope.saveEditMessage = function(): Promise<void> {
+		return new Promise<void>(function(resolve, reject) {
+			if ($scope.isTextEmpty($scope.editedMessage.content)) {
+				$scope.editedMessage.error = 'forum.message.empty';
+				reject();
+			}
+			resolve();
+			$scope.editedMessage.error = undefined;
+			$scope.editedMessage.save();
+			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+		});
 	};
 
 	$scope.cancelEditMessage = function(){
