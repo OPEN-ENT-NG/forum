@@ -273,15 +273,16 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			if ($scope.isTextEmpty(newMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
 				reject();
+				return;
 			}
 			$scope.editedMessage.content = newMessage.content;
 			newMessage.content = "";
 			$scope.editedMessage.error = undefined;
 			$scope.subject.addMessage($scope.editedMessage);
+			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+			$scope.editedMessage.content = "";
 			setTimeout(function () {
-				resolve();
-				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-				$scope.editedMessage.content = "";
+				resolve();//resolve trigger reset-guard
 				template.open('main', 'subject');
 			}, 0);
 		});
