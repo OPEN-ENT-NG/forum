@@ -16,11 +16,11 @@
     </side-panel>
 
     <app-title>
-        <h1>
+        <h1 guard-root>
             <i class="forum"></i>
-            <span ng-click="openMainPage()"><i18n>forum.title</i18n></span><span class="zero-mobile"> / </span>
+            <span reset-guard="openMainPage()"><i18n>forum.title</i18n></span><span class="zero-mobile"> / </span>
             <span subtitle>
-                <a class="subtitle-item" ng-click="openCategory(subject.category)">[[subject.category.name]]</a> /
+                <a class="subtitle-item" reset-guard="openCategory(subject.category)">[[subject.category.name]]</a> /
                 <span class="subtitle-item" >[[subject.title]]</span>
             </span>
         </h1>

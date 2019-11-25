@@ -273,8 +273,8 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			if ($scope.isTextEmpty(newMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
 				reject();
-				return;
 			}
+			resolve();//resolve trigger reset-guard
 			$scope.editedMessage.content = newMessage.content;
 			newMessage.content = "";
 			$scope.editedMessage.error = undefined;
@@ -282,7 +282,6 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
 			$scope.editedMessage.content = "";
 			setTimeout(function () {
-				resolve();//resolve trigger reset-guard
 				template.open('main', 'subject');
 			}, 0);
 		});
