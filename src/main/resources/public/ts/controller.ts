@@ -302,19 +302,22 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 
 	$scope.editMessage = function(message){
 		$scope.editedMessage = message;
-        $scope.editedMessage.backupContent = message.content;
+		$scope.editedMessage.backupContent = message.content;
 	};
 
 	$scope.saveEditMessage = function(): Promise<void> {
 		return new Promise<void>(function(resolve, reject) {
 			if ($scope.isTextEmpty($scope.editedMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
+				$scope.$apply();
 				reject();
+			} else {
+				resolve();
+				$scope.editedMessage.error = undefined;
+				$scope.editedMessage.save();
+				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+				$scope.$apply();
 			}
-			resolve();
-			$scope.editedMessage.error = undefined;
-			$scope.editedMessage.save();
-			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
 		});
 	};
 
@@ -434,7 +437,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 	}
 
 	$scope.isTextEmpty = function(str) {
-		if (str !== undefined && str.replace(/<div class="ng-scope">|<\/div>|<br>|<p>|<\/p>|&nbsp;| /g, '') !== "") {
+		if (str !== undefined && str.replace(/<div class="ng-scope">|<\/div>|<div>|<br>|<p>|<\/p>|&nbsp;| /g, '') !== "") {
 			return false;
 		}
 		return true;
