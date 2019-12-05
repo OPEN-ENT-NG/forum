@@ -18,6 +18,8 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 
     $scope.maxSubjects = 3;
 
+    $scope.forceToClose = false;
+
 	// Definition of actions
 	route({
 		goToCategory: function(params){
@@ -225,25 +227,30 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			if ($scope.isTitleEmpty($scope.subject.title)) {
 				$scope.subject.title = undefined;
 				$scope.subject.error = 'forum.subject.missing.title';
+				$scope.$apply()
 				reject();
-			}
-
-			if ($scope.isTextEmpty($scope.editedMessage.content)) {
+			}else if ($scope.isTextEmpty($scope.editedMessage.content)) {
 				$scope.subject.error = 'forum.message.empty';
+				$scope.$apply()
 				reject();
-			}
-			resolve();
-			$scope.subject.error = undefined;
-			$scope.category.addSubject($scope.subject, function () {
-				$scope.subject.addMessage($scope.editedMessage, undefined, function () {
-					$scope.category.open();
+			}else {
+				resolve();
+				$scope.forceToClose = true;
+				$scope.subject.error = undefined;
+				$scope.$apply();
+				$scope.category.addSubject($scope.subject, function () {
+					$scope.subject.addMessage($scope.editedMessage, undefined, function () {
+						$scope.forceToClose = false;
+						$scope.category.open();
+						$scope.$apply();
+					});
+					$scope.messages = $scope.subject.messages;
+					$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+					$scope.editedMessage.content = "";
 				});
-				$scope.messages = $scope.subject.messages;
-				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-				$scope.editedMessage.content = "";
-			});
-			//template.open('main', 'read-subject');
-			template.open('main', 'subject');
+				//template.open('main', 'read-subject');
+				template.open('main', 'subject');
+			}
 		});
 	};
 
@@ -272,18 +279,20 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		return new Promise<void>(function(resolve, reject) {
 			if ($scope.isTextEmpty(newMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
+				$scope.$apply()
 				reject();
+			}else {
+				resolve();//resolve trigger reset-guard
+				$scope.editedMessage.content = newMessage.content;
+				newMessage.content = "";
+				$scope.editedMessage.error = undefined;
+				$scope.subject.addMessage($scope.editedMessage);
+				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+				$scope.editedMessage.content = "";
+				setTimeout(function () {
+					template.open('main', 'subject');
+				}, 0);
 			}
-			resolve();//resolve trigger reset-guard
-			$scope.editedMessage.content = newMessage.content;
-			newMessage.content = "";
-			$scope.editedMessage.error = undefined;
-			$scope.subject.addMessage($scope.editedMessage);
-			$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-			$scope.editedMessage.content = "";
-			setTimeout(function () {
-				template.open('main', 'subject');
-			}, 0);
 		});
 	};
 
