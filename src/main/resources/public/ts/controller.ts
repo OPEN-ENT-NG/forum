@@ -208,9 +208,10 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
 	};
 
-	$scope.openMainPage = function(){
+	$scope.openMainPage = function(showAddSubjectHelp){
 		delete $scope.category;
 		$scope.categories.deselectAll();
+		$scope.showAddSubjectHelp = showAddSubjectHelp;
         template.open('main', 'home');
 	};
 
@@ -258,6 +259,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		$scope.subject.error = undefined;
 		$scope.subject = undefined;
 		$scope.subjects.sync();
+		$scope.showAddSubjectHelp = false;
         template.open('main', 'home');
 	};
 
@@ -373,7 +375,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		}
 		else { // when creating a category
 			$scope.category.save(function(){
-				template.open('main', 'share-category');
+				template.open('main', 'created-category');
 			});
 			$scope.categories.sync();
 		}
@@ -382,6 +384,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 
 	$scope.cancelCategoryEdit = function(){
 		$scope.category = undefined;
+		$scope.showAddSubjectHelp = false;
 		template.open('main', 'home');
 	};
 
@@ -500,5 +503,9 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
             });
         }));
 		return $scope.selectedSubjects;
-    };
+	};
+	
+	$scope.isEmpty = () => {
+		return $scope.categories && $scope.categories.all && $scope.categories.all.length < 1;
+	}
 }])

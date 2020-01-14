@@ -1,12 +1,50 @@
-<app-title class="cell">
-    <h1>
-        <i class="forum"></i><i18n ng-click="openMainPage()">forum.title</i18n>
-    </h1>
-</app-title>
+<div class="row">
+    <div class="cell">
+        <app-title>
+            <h1><i class="forum"></i><i18n ng-click="openMainPage(false)">forum.title</i18n></h1>
+        </app-title>
+    </div>
+    <div class="cell right-magnet" workflow="forum.admin" ng-if="!isEmpty()">
+        <button ng-click="newCategory()"><i18n>forum.category.new</i18n></button>
+    </div>
+</div>
 
-<button workflow="forum.admin" class="right-magnet" ng-click="newCategory()"><i18n>forum.category.new</i18n></button>
+<div class="row">
+    <section ng-if="isEmpty()">
+        <!-- Emptyscreen Consultation -->
+        <div class="emptyscreen" workflow-not="forum.admin">
+            <h2 class="emptyscreen-header">
+                <i18n>empty.forum.consultation.title</i18n>
+            </h2>
+            <img class="emptyscreen-image__mini" src="/forum/public/img/empty-forum.svg">
+            <p class="emptyscreen-footer">
+                <i18n>empty.forum.consultation</i18n>
+            </p>
+        </div>
 
-<nav class="illustrated-links">
+        <!-- Emptyscreen Creation -->
+        <div class="emptyscreen" workflow="forum.admin">
+            <h2 class="emptyscreen-header">
+                <i18n>empty.forum.creation.title</i18n>
+            </h2>
+            <img class="emptyscreen-image__mini" src="/forum/public/img/empty-forum.svg">
+            <p class="emptyscreen-footer">
+                <i18n>empty.forum.creation</i18n>
+            </p>
+            <button class="right-magnet" ng-click="newCategory()"><i18n>forum.category.new</i18n></button>
+        </div>
+
+    </section>
+    
+    <!-- New Subjet Help -->
+    <section ng-if="showAddSubjectHelp">
+        <infotip name="forum-add-subject-help" class="info">
+            <strong><i18n>forum.you.can.add.subject</i18n></strong>
+        </infotip>
+    </section>
+</div>
+
+<nav class="illustrated-links" ng-if="!isEmpty()">
     <ul>
         <div ng-repeat="cat in categories.all">
             <li ng-class="{ selected: cat.selected }">
@@ -71,17 +109,15 @@
 <section class="toggle-buttons" ng-class="{ hide: categories.selection().length === 0 }">
 	<div class="toggle">
 		<div class="row">
-            <div class="cell">
-                <button ng-click="print(categories.selection()[0])" ng-if="categories.selection().length === 1"><i18n>print</i18n></button>
-            </div>
+            <resource-right name="contrib" resource="categories.selection()" class="cell">
+                <button ng-click="newSubject(categories.selection()[0])"><i18n>forum.subject.new</i18n></button>
+            </resource-right>
             <resource-right name="manage" resource="categories.selection()" class="cell">
                 <button ng-click="editCategory(categories.selection()[0], $event)" ng-if="categories.selection().length === 1"><i18n>edit</i18n></button>
-                <button ng-click="confirmRemoveCategory(categories.selection()[0], $event)"><i18n>remove</i18n></button>
                 <button ng-click="shareCategory(categories.selection()[0], $event)"><i18n>share</i18n></button>
+                <button ng-click="print(categories.selection()[0])" ng-if="categories.selection().length === 1"><i18n>print</i18n></button>
+                <button ng-click="confirmRemoveCategory(categories.selection()[0], $event)"><i18n>remove</i18n></button>
             </resource-right>
-            <resource-right name="contrib" resource="categories.selection()" class="cell">
-        		<button ng-click="newSubject(categories.selection()[0])"><i18n>forum.subject.new</i18n></button>
-        	</resource-right>
 		</div>
 	</div>
 </section>

@@ -1,0 +1,21 @@
+<app-title>
+    <h1><i18n ng-click="openMainPage()">forum.title</i18n></h1>
+</app-title>
+
+<h2>[[category[0].name]]</h2>
+
+<div class="vertical-spacing"></div>
+
+<div class="row">
+	<p>
+        <i18n>forum.the.category</i18n> [[category[0].name]] <i18n>forum.has.been.created</i18n>
+    </p>
+</div>
+
+<div class="row">
+    <p>
+		<i18n>forum.you.can.share.this.category</i18n>
+	</p>
+	<share-panel app-prefix="'forum'" resources="category" on-submit="openMainPage(false)"></share-panel>
+	<input type="button" class="left-magnet" i18n-value="forum.category.share.return" ng-click="openMainPage(true)" />
+</div>
