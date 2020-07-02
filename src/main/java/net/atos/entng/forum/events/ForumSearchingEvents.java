@@ -204,13 +204,13 @@ public class ForumSearchingEvents implements SearchingEvents {
 
 		if (countMatchMessages == 0) {
 			map.put("modified", defaultDate);
-			map.put("description", i18n.translate("forum.search.description.none", locale, titleRes));
+			map.put("description", i18n.translate("forum.search.description.none", i18n.DEFAULT_DOMAIN, locale, titleRes));
 		} else if (countMatchMessages == 1) {
 			map.put("modified", modifiedRes);
-			map.put("description", i18n.translate("forum.search.description.one", locale, titleRes));
+			map.put("description", i18n.translate("forum.search.description.one", i18n.DEFAULT_DOMAIN, locale, titleRes));
 		} else {
 			map.put("modified", modifiedRes);
-			map.put("description", i18n.translate("forum.search.description.several", locale,
+			map.put("description", i18n.translate("forum.search.description.several", i18n.DEFAULT_DOMAIN, locale,
 					titleRes, countMatchMessages.toString()));
 		}
 
