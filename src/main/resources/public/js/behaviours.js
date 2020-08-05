@@ -390,7 +390,7 @@
 	                        http().get('/forum/categories').done(function (categories) {
 	                            this.resources = _.map(categories, function (category) {
 	                                category.title = category.name;
-	                                category.icon = category.icon || '/img/illustrations/forum-default.png';
+	                                category.icon = category.icon || '/img/illustrations/forum.svg';
 	                                category.path = '/forum#/view/' + category._id;
 	                                return category;
 	                            });
