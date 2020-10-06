@@ -28,9 +28,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.wseduc.webutils.I18n;
+import net.atos.entng.forum.Forum;
 import net.atos.entng.forum.services.CategoryService;
 import net.atos.entng.forum.services.SubjectService;
 
+import org.entcore.common.events.EventHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -46,9 +50,11 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
 
 public class SubjectHelper extends ExtractorHelper {
+	static final String RESOURCE_NAME = "forum_subject";
 
 	private final SubjectService subjectService;
 	private final CategoryService categoryService;
+	private final EventHelper eventHelper;
 
 	private static final String CATEGORY_ID_PARAMETER = "id";
 	private static final String SUBJECT_ID_PARAMETER = "subjectid";
@@ -61,6 +67,8 @@ public class SubjectHelper extends ExtractorHelper {
 	public SubjectHelper(final SubjectService subjectService, final CategoryService categoryService) {
 		this.subjectService = subjectService;
 		this.categoryService = categoryService;
+		final EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Forum.class.getSimpleName());
+		this.eventHelper = new EventHelper(eventStore);
 	}
 
 	@Override
@@ -142,6 +150,7 @@ public class SubjectHelper extends ExtractorHelper {
                                                     notifyTimeline(request, user, params, event.right().getValue().getString("_id"), NEW_SUBJECT_EVENT_TYPE);
                                                 }
                                                 renderJson(request, event.right().getValue(), 200);
+                                                eventHelper.onCreateResource(request, RESOURCE_NAME);
                                             });
 										}
 									} else {

@@ -31,8 +31,12 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
+import net.atos.entng.forum.Forum;
 import net.atos.entng.forum.services.CategoryService;
 
+import org.entcore.common.events.EventHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.mongodb.MongoDbControllerHelper;
 import org.entcore.common.share.ShareService;
 import org.entcore.common.share.impl.MongoDbShareService;
@@ -50,9 +54,10 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.security.SecuredAction;
 
 public class CategoryHelper extends MongoDbControllerHelper {
-
+	static final String RESOURCE_NAME = "forum_category";
 	private final String managedCollection;
 	private final String type;
+	private final EventHelper eventHelper;
 
 	private final CategoryService categoryService;
 	private ShareService shareService;
@@ -68,6 +73,8 @@ public class CategoryHelper extends MongoDbControllerHelper {
 		this.managedCollection = managedCollection;
 		this.type = managedCollection.toUpperCase();
 		this.categoryService = categoryService;
+		final EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Forum.class.getSimpleName());
+		this.eventHelper = new EventHelper(eventStore);
 	}
 
 	@Override
@@ -100,7 +107,11 @@ public class CategoryHelper extends MongoDbControllerHelper {
 
 	@Override
 	public void create(final HttpServerRequest request) {
-		super.create(request);
+		super.create(request, r -> {
+			if(r.succeeded()){
+				eventHelper.onCreateResource(request, RESOURCE_NAME);
+			}
+		});
 	}
 
 	@Override

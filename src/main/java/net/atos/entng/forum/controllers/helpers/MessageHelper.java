@@ -26,10 +26,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.wseduc.webutils.I18n;
+import net.atos.entng.forum.Forum;
 import net.atos.entng.forum.services.CategoryService;
 import net.atos.entng.forum.services.MessageService;
 import net.atos.entng.forum.services.SubjectService;
 
+import org.entcore.common.events.EventHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.notification.TimelineHelper;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -46,6 +50,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
 
 public class MessageHelper extends ExtractorHelper {
+	static final String RESOURCE_NAME = "forum_message";
 
 	private static final String CATEGORY_ID_PARAMETER = "id";
 	private static final String SUBJECT_ID_PARAMETER = "subjectid";
@@ -59,6 +64,7 @@ public class MessageHelper extends ExtractorHelper {
 	private final MessageService messageService;
 	private final SubjectService subjectService;
 	private final CategoryService categoryService;
+	private final EventHelper eventHelper;
 
 	protected TimelineHelper notification;
 
@@ -66,6 +72,8 @@ public class MessageHelper extends ExtractorHelper {
 		this.messageService = messageService;
 		this.subjectService = subjectService;
 		this.categoryService = categoryService;
+		final EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Forum.class.getSimpleName());
+		this.eventHelper = new EventHelper(eventStore);
 	}
 
 	@Override
@@ -136,6 +144,7 @@ public class MessageHelper extends ExtractorHelper {
 										if (event.right().getValue() != null && event.right().getValue().size() > 0) {
 											notifyTimeline(request, user, body, NEW_MESSAGE_EVENT_TYPE);
 											renderJson(request, event.right().getValue(), 200);
+											eventHelper.onCreateResource(request, RESOURCE_NAME);
 										}
 									} else {
 										JsonObject error = new JsonObject().put("error", event.left().getValue());
