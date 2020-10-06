@@ -35,3 +35,5 @@ developer.id
 **/view
 node_modules
 rev-manifest.json
+gradle/
+gradlew*
