@@ -60,7 +60,7 @@
     			<p bind-html="message.content"></p>
     		</article>
     		<article class="margin-two bubble" ng-if="message === editedMessage" ng-init="disableResizableElement = false" guard-root>
-                    <editor ng-model="editedMessage.content" required input-guard></editor>
+                    <editor ng-model="editedMessage.content" required input-guard  track-input-event="getTracker(editedMessage)"></editor>
     			<div class="ten cell warning" ng-if="editedMessage.error !== undefined" translate content="[[editedMessage.error]]">
     			</div>
                 <div class="row">
@@ -83,7 +83,7 @@
     		</div>
             <article class="margin-two bubble" guard-root>
                 <h2> <i18n>forum.user.answer</i18n></h2>
-        		<editor ng-model="newMessage.content" input-guard required></editor>
+        		<editor ng-model="newMessage.content" input-guard required track-input-event="getTracker(newMessage)"></editor>
         		<div class="ten cell warning" ng-if="editedMessage.error !== undefined" translate content="[[editedMessage.error]]">
         		</div>
                 <div class="row">

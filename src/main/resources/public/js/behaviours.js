@@ -177,7 +177,7 @@
 	        });
 	    }
 	};
-	forumNamespace.Message.prototype.createMessage = function (cb, excludeNotification) {
+	forumNamespace.Message.prototype.createMessage = function (cb, excludeNotification, err) {
 	    if (excludeNotification !== true) {
 	        notify.info('forum.message.sent');
 	    }
@@ -185,29 +185,35 @@
 	        if (typeof cb === 'function') {
 	            cb();
 	        }
+	    }).error(function () {
+	        err && err();
 	    });
 	};
-	forumNamespace.Message.prototype.editMessage = function (cb) {
+	forumNamespace.Message.prototype.editMessage = function (cb, err) {
 	    http().putJson('/forum/category/' + this.subject.category._id + '/subject/' + this.subject._id + '/message/' + this._id, this).done(function () {
 	        if (typeof cb === 'function') {
 	            cb();
 	        }
+	    }).error(function () {
+	        err && err();
 	    });
 	};
-	forumNamespace.Message.prototype.save = function (cb, excludeNotification) {
+	forumNamespace.Message.prototype.save = function (cb, excludeNotification, err) {
 	    if (!this._id) {
-	        this.createMessage(cb, excludeNotification);
+	        this.createMessage(cb, excludeNotification, err);
 	    }
 	    else {
-	        this.editMessage(cb);
+	        this.editMessage(cb, err);
 	    }
 	};
-	forumNamespace.Message.prototype.remove = function (cb) {
+	forumNamespace.Message.prototype.remove = function (cb, err) {
 	    http().delete('/forum/category/' + this.subject.category._id + '/subject/' + this.subject._id + '/message/' + this._id).done(function () {
 	        notify.info('forum.message.deleted');
 	        if (typeof cb === 'function') {
 	            cb();
 	        }
+	    }).error(function () {
+	        err && err();
 	    });
 	};
 	forumNamespace.Message.prototype.toJSON = function () {
@@ -223,7 +229,7 @@
 	    });
 	    this.messages.sync();
 	};
-	forumNamespace.Subject.prototype.addMessage = function (message, excludeNotification, cb) {
+	forumNamespace.Subject.prototype.addMessage = function (message, excludeNotification, cb, err) {
 	    message.subject = this;
 	    message.owner = {
 	        userId: model.me.userId,
@@ -235,7 +241,9 @@
 	        if (typeof cb === 'function') {
 	            cb();
 	        }
-	    }.bind(this), excludeNotification);
+	    }.bind(this), excludeNotification, function () {
+	        err && err();
+	    });
 	};
 	forumNamespace.Subject.prototype.createSubject = function (cb) {
 	    var subject = this;

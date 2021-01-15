@@ -1,9 +1,10 @@
-import {routes, model, Behaviours, ng, template, moment, $, _, skin} from 'entcore';
+import {routes, model, Behaviours, ng, template, moment, $, _, skin, trackingService} from 'entcore';
+import {ForumControllerScope} from "./commons";
 import * as jQuery from 'jquery';
 import http from "axios";
 
 export let forumController = ng.controller('ForumController', ['$scope', 'model', 'route',
-	function ($scope, model, route){
+	function ($scope:ForumControllerScope, model, route){
 	let Message = Behaviours.applicationsBehaviours.forum.namespace.Message;
 	$scope.notFound = false;
 
@@ -15,11 +16,23 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 
 	$scope.display = {};
 	$scope.editedMessage = new Message();
+	$scope.newMessage = new Message();
 
     $scope.maxSubjects = 3;
 
     $scope.forceToClose = false;
 
+    $scope.safeApply = function (fn) {
+        const phase = this.$root.$$phase;
+        if (phase == '$apply' || phase == '$digest') {
+            if (fn && (typeof (fn) === 'function')) {
+                fn();
+            }
+        } else {
+            this.$apply(fn);
+        }
+	};
+	
 	// Definition of actions
 	route({
 		goToCategory: function(params){
@@ -133,6 +146,14 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		}
 	});
 
+	$scope.getTracker = function(message){
+		if(!message.tracker){
+			const category = $scope.category || $scope.subject.category;
+			message.tracker = trackingService.trackEdition({resourceId:message._id,resourceUri:`/forum/${category._id}/subject/${$scope.subject._id}/message/${message._id}`})
+		}
+		return message.tracker;
+	}
+
 	$scope.print = function (category) {
 		window.open(`/forum/print/forum#/print/${category._id}`, '_blank');
 	};
@@ -195,7 +216,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		});
 		category.open(function(){
 			template.open('main', 'home');
-            category.limitSubjects = category.subjects.length();
+            category.limitSubjects = (category.subjects as any).length();
 		});
 	};
 
@@ -228,22 +249,22 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			if ($scope.isTitleEmpty($scope.subject.title)) {
 				$scope.subject.title = undefined;
 				$scope.subject.error = 'forum.subject.missing.title';
-				$scope.$apply()
+				$scope.safeApply()
 				reject();
 			}else if ($scope.isTextEmpty($scope.editedMessage.content)) {
 				$scope.subject.error = 'forum.message.empty';
-				$scope.$apply()
+				$scope.safeApply()
 				reject();
 			}else {
 				resolve();
 				$scope.forceToClose = true;
 				$scope.subject.error = undefined;
-				$scope.$apply();
+				$scope.safeApply();
 				$scope.category.addSubject($scope.subject, function () {
 					$scope.subject.addMessage($scope.editedMessage, undefined, function () {
 						$scope.forceToClose = false;
 						$scope.category.open();
-						$scope.$apply();
+						$scope.safeApply();
 					});
 					$scope.messages = $scope.subject.messages;
 					$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
@@ -281,14 +302,22 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		return new Promise<void>(function(resolve, reject) {
 			if ($scope.isTextEmpty(newMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
-				$scope.$apply()
+				$scope.safeApply()
 				reject();
 			}else {
 				resolve();//resolve trigger reset-guard
+				const tracker = $scope.getTracker(newMessage);
+				tracker.onStop();
 				$scope.editedMessage.content = newMessage.content;
 				newMessage.content = "";
+				newMessage.tracker = undefined;
+				newMessage.tracker = $scope.getTracker(newMessage);
 				$scope.editedMessage.error = undefined;
-				$scope.subject.addMessage($scope.editedMessage);
+				$scope.subject.addMessage($scope.editedMessage, undefined, ()=>{
+					tracker.onFinish(true)
+				},()=>{
+					tracker.onFinish(false)
+				});
 				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
 				$scope.editedMessage.content = "";
 				setTimeout(function () {
@@ -311,21 +340,30 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 		return new Promise<void>(function(resolve, reject) {
 			if ($scope.isTextEmpty($scope.editedMessage.content)) {
 				$scope.editedMessage.error = 'forum.message.empty';
-				$scope.$apply();
+				$scope.safeApply();
 				reject();
 			} else {
 				resolve();
+				const tracker = $scope.getTracker($scope.editedMessage);
+				tracker.onStop();
 				$scope.editedMessage.error = undefined;
-				$scope.editedMessage.save();
+				$scope.editedMessage.save(()=>{
+					tracker.onFinish(true)
+				}, undefined, ()=>{
+					tracker.onFinish(false)
+				});
 				$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
-				$scope.$apply();
+				$scope.safeApply();
 			}
 		});
 	};
 
 	$scope.cancelEditMessage = function(){
+		const tracker = $scope.getTracker($scope.editedMessage);
         $scope.editedMessage.content = $scope.editedMessage.backupContent;
 		$scope.editedMessage = new Behaviours.applicationsBehaviours.forum.namespace.Message();
+		tracker.onCancel();
+		$scope.safeApply();
 	};
 
 	$scope.confirmRemoveMessage = function(message){
@@ -369,7 +407,7 @@ export let forumController = ng.controller('ForumController', ['$scope', 'model'
 			$scope.category.save(function(){
 				$scope.categories.sync(function(){
 					$scope.cancelCategoryEdit();
-					$scope.$apply();
+					$scope.safeApply();
 				});
 			});
 		}
