@@ -173,7 +173,19 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 
 	@Override
 	public void deleteGroups(JsonArray groups) {
-		if(groups == null || groups.size() == 0) {
+		if(groups == null)
+		{
+			log.warn("[ForumRepositoryEvents][deleteGroups] JsonArray groups is null or empty");
+			return;
+		}
+
+		for(int i = groups.size(); i-- > 0;)
+		{
+			if(groups.hasNull(i))
+			groups.remove(i);
+		}
+		if(groups.size() == 0)
+		{
 			log.warn("[ForumRepositoryEvents][deleteGroups] JsonArray groups is null or empty");
 			return;
 		}
@@ -204,10 +216,20 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	@Override
 	public void deleteUsers(JsonArray users) {
         //FIXME: anonymization is not relevant
-		if(users == null || users.size() == 0) {
+		if(users == null) {
 			log.warn("[ForumRepositoryEvents][deleteUsers] JsonArray users is null or empty");
 			return;
 		}
+		for(int i = users.size(); i-- > 0;)
+		{
+			if(users.hasNull(i))
+				users.remove(i);
+		}
+    if(users.size() == 0)
+    {
+				log.warn("[ForumRepositoryEvents][deleteUsers] JsonArray users is null or empty");
+        return;
+    }
 
 		final String [] usersIds = new String[users.size()];
 		for (int i = 0; i < users.size(); i++) {
