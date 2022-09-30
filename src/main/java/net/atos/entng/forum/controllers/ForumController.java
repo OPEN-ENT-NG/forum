@@ -79,6 +79,7 @@ public class ForumController extends BaseController {
 
 	@Get("/print/forum")
 	@ApiDoc("Print category by id")
+	@SecuredAction(value = "", type = ActionType.AUTHENTICATED)
 	public void print(HttpServerRequest request) {
 		renderView(request, new JsonObject().put("printCategoryId", request.params().get("forum")), "print.html", null);
 	}
