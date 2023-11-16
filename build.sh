@@ -20,17 +20,22 @@ case `uname -s` in
     fi
 esac
 
-# options
+# Options
+NO_DOCKER=""
 SPRINGBOARD="recette"
 for i in "$@"
 do
 case $i in
-    -s=*|--springboard=*)
-    SPRINGBOARD="${i#*=}"
-    shift
-    ;;
-    *)
-    ;;
+  -s=*|--springboard=*)
+  SPRINGBOARD="${i#*=}"
+  shift
+  ;;
+  --no-docker*)
+  NO_DOCKER="true"
+  shift
+  ;;
+  *)
+  ;;
 esac
 done
 
@@ -44,7 +49,13 @@ test () {
 }
 
 clean () {
-  docker compose run --rm maven mvn $MVN_OPTS clean
+  if [ "$NO_DOCKER" = "true" ] ; then
+    rm -rf node_modules
+    rm -f yarn.lock
+    mvn clean
+  else
+    docker compose run --rm maven mvn $MVN_OPTS clean
+  fi
 }
 
 buildNode () {
@@ -64,25 +75,45 @@ buildNode () {
       echo "[buildNode] Use entcore version from package.json ($BRANCH_NAME)"
       case `uname -s` in
         MINGW*)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && npm update entcore && node_modules/gulp/bin/gulp.js build"
+          if [ "$NO_DOCKER" = "true" ] ; then
+            yarn install --no-bin-links && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build
+          else
+            docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links --legacy-peer-deps --force && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build"
+          fi
           ;;
         *)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm update entcore && node_modules/gulp/bin/gulp.js build"
+          if [ "$NO_DOCKER" = "true" ] ; then
+            yarn install && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build
+          else
+            docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --legacy-peer-deps --force && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build"
+          fi
       esac
   else
       echo "[buildNode] Use entcore tag $BRANCH_NAME"
       case `uname -s` in
         MINGW*)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && npm rm --no-save entcore && npm install --no-save entcore@$BRANCH_NAME && node_modules/gulp/bin/gulp.js build"
+          if [ "$NO_DOCKER" = "true" ] ; then
+            yarn install && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build
+          else
+            docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --no-bin-links --legacy-peer-deps --force && npm rm --no-save entcore && yarn install --no-save entcore@dev && node_modules/gulp/bin/gulp.js build"
+          fi
           ;;
         *)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm rm --no-save entcore && npm install --no-save entcore@$BRANCH_NAME && node_modules/gulp/bin/gulp.js build"
+          if [ "$NO_DOCKER" = "true" ] ; then
+            yarn install --no-bin-links && yarn upgrade entcore && node_modules/gulp/bin/gulp.js build
+          else
+            docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "yarn install --legacy-peer-deps --force && npm rm --no-save entcore && yarn install --no-save entcore@dev && node_modules/gulp/bin/gulp.js build"
+          fi
       esac
   fi
 }
 
 buildGradle () {
-  docker compose run --rm maven mvn $MVN_OPTS install -DskipTests
+  if [ "$NO_DOCKER" = "true" ] ; then
+    mvn install -DskipTests
+  else
+    docker compose run --rm maven mvn $MVN_OPTS install -DskipTests
+  fi
 }
 
 publish () {
@@ -92,12 +123,19 @@ publish () {
     *SNAPSHOT) export nexusRepository='snapshots' ;;
     *)         export nexusRepository='releases' ;;
   esac
-
-  docker compose run --rm  maven mvn -DrepositoryId=ode-$nexusRepository -DskipTests --settings /var/maven/.m2/settings.xml deploy
+  if [ "$NO_DOCKER" = "true" ] ; then
+    mvn -DrepositoryId=ode-$nexusRepository -DskipTests deploy
+  else
+    docker compose run --rm  maven mvn -DrepositoryId=ode-$nexusRepository -DskipTests --settings /var/maven/.m2/settings.xml deploy
+  fi
 }
 
 watch () {
-  docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js watch --springboard=/home/node/$SPRINGBOARD"
+  if [ "$NO_DOCKER" = "true" ] ; then
+    node_modules/gulp/bin/gulp.js watch --springboard=../recette
+  else
+    docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js watch --springboard=/home/node/$SPRINGBOARD"
+  fi
 }
 
 for param in "$@"
