@@ -91,7 +91,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 		// Prepare Message object
 		final ObjectId newId = new ObjectId();
 		JsonObject now = MongoDb.now();
-		body.put("_id", newId.toStringMongod())
+		body.put("_id", newId.toHexString())
 			.put("owner", new JsonObject()
 				.put("userId", user.getUserId())
 				.put("displayName", user.getUsername()))
@@ -115,7 +115,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 						if (event.right().getValue().getInteger("number").intValue() == 1) {
 							// Respond with created message Id
 							JsonObject created = new JsonObject();
-							created.put("_id", newId.toStringMongod());
+							created.put("_id", newId.toHexString());
 							handler.handle(new Either.Right<String, JsonObject>(created));
 						}
 						else {
