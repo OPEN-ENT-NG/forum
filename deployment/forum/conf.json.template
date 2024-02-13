@@ -1,5 +1,5 @@
     {
-  		"name": "net.atos~forum~1.13.3",
+  		"name": "net.atos~forum~1.13.3-dev-sre-SNAPSHOT",
   		"config": {
   		  "main" : "net.atos.entng.forum.Forum",
   		  "port" : 8024,
