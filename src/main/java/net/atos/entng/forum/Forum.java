@@ -19,6 +19,7 @@
 
 package net.atos.entng.forum;
 
+import io.vertx.core.Promise;
 import net.atos.entng.forum.controllers.ForumController;
 import net.atos.entng.forum.events.ForumSearchingEvents;
 import net.atos.entng.forum.services.CategoryService;
@@ -41,8 +42,8 @@ public class Forum extends BaseServer {
 	public static final String MANAGE_RIGHT_ACTION = "net-atos-entng-forum-controllers-ForumController|updateCategory";
 
 	@Override
-	public void start() throws Exception {
-		super.start();
+	public void start(Promise<Void> startPromise) throws Exception {
+		super.start(startPromise);
 		// Subscribe to events published for transition
 		setRepositoryEvents(new ForumRepositoryEvents(vertx));
 
@@ -60,6 +61,7 @@ public class Forum extends BaseServer {
 
 		setDefaultResourceFilter(new ShareAndOwner());
 		addController(new ForumController(CATEGORY_COLLECTION, categoryService, subjectService, messageService));
+		startPromise.tryComplete();
 	}
 
 }

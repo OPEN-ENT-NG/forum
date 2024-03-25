@@ -19,37 +19,32 @@
 
 package net.atos.entng.forum.events;
 
-import static net.atos.entng.forum.Forum.CATEGORY_COLLECTION;
-import static net.atos.entng.forum.Forum.SUBJECT_COLLECTION;
-import static net.atos.entng.forum.Forum.MANAGE_RIGHT_ACTION;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
-
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.mongodb.MongoUpdateBuilder;
 import fr.wseduc.webutils.Either;
-
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
-import net.atos.entng.forum.Forum;
-import org.entcore.common.mongodb.MongoDbConf;
-import org.entcore.common.mongodb.MongoDbResult;
-import org.entcore.common.service.impl.MongoDbRepositoryEvents;
-import org.entcore.common.user.RepositoryEvents;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import net.atos.entng.forum.Forum;
+import org.bson.conversions.Bson;
+import org.entcore.common.mongodb.MongoDbResult;
+import org.entcore.common.service.impl.MongoDbRepositoryEvents;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import static net.atos.entng.forum.Forum.*;
+import static com.mongodb.client.model.Filters.*;
 
 public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 
@@ -67,13 +62,12 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	public void exportResources(JsonArray resourcesIds, boolean exportDocuments, boolean exportSharedResources, String exportId, String userId,
 								JsonArray g, String exportPath, String locale, String host, Handler<Boolean> handler)
 	{
-			QueryBuilder findByOwner = QueryBuilder.start("owner.userId").is(userId);
+			Bson findByOwner = eq("owner.userId", userId);
 
-			QueryBuilder findByShared = QueryBuilder.start().or(
-					QueryBuilder.start("shared.userId").is(userId).get(),
-					QueryBuilder.start("shared.groupId").in(g).get()
-			);
-			QueryBuilder findByAuthorOrOwnerOrShared = exportSharedResources == false ? findByOwner : QueryBuilder.start().or(findByOwner.get(),findByShared.get());
+			Bson findByShared = or(
+					eq("shared.userId", userId),
+					in("shared.groupId", g));
+			Bson findByAuthorOrOwnerOrShared = exportSharedResources == false ? findByOwner : or(findByOwner, findByShared);
 
 			JsonObject query;
 
@@ -81,9 +75,8 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 				query = MongoQueryBuilder.build(findByAuthorOrOwnerOrShared);
 			else
 			{
-				QueryBuilder limitToResources = findByAuthorOrOwnerOrShared.and(
-					QueryBuilder.start("_id").in(resourcesIds).get()
-				);
+				Bson limitToResources = and(findByAuthorOrOwnerOrShared,
+					in("_id", resourcesIds));
 				query = MongoQueryBuilder.build(limitToResources);
 			}
 
@@ -106,7 +99,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 						});
 
 						final Set<String> ids = results.stream().map(res -> ((JsonObject)res).getString("_id")).collect(Collectors.toSet());
-						QueryBuilder findByCategoryId = QueryBuilder.start("category").in(ids);
+						Bson findByCategoryId = in("category", ids);
 						JsonObject query2 = MongoQueryBuilder.build(findByCategoryId);
 
 						mongo.find(Forum.SUBJECT_COLLECTION, query2, new Handler<Message<JsonObject>>()
@@ -203,10 +196,10 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 			groupIds[i] = j.getString("group");
 		}
 
-		final JsonObject matcher = MongoQueryBuilder.build(QueryBuilder.start("shared.groupId").in(groupIds));
+		final JsonObject matcher = MongoQueryBuilder.build(in("shared.groupId", groupIds));
 
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
-		modifier.pull("shared", MongoQueryBuilder.build(QueryBuilder.start("groupId").in(groupIds)));
+		modifier.pull("shared", MongoQueryBuilder.build(in("groupId", groupIds)));
 		// remove all the shares with groups
 		mongo.update(CATEGORY_COLLECTION, matcher, modifier.build(), false, true, MongoDbResult.validActionResultHandler(new Handler<Either<String,JsonObject>>() {
 			@Override
@@ -261,9 +254,9 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * @param usersIds users identifiers
 	 */
 	private void removeSharesCategories(final String [] usersIds){
-		final JsonObject criteria = MongoQueryBuilder.build(QueryBuilder.start("shared.userId").in(usersIds));
+		final JsonObject criteria = MongoQueryBuilder.build(in("shared.userId", usersIds));
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
-		modifier.pull("shared", MongoQueryBuilder.build(QueryBuilder.start("userId").in(usersIds)));
+		modifier.pull("shared", MongoQueryBuilder.build(in("userId", usersIds)));
 
 		// Remove Categories shares with these users
 		mongo.update(CATEGORY_COLLECTION, criteria, modifier.build(), false, true, MongoDbResult.validActionResultHandler(new Handler<Either<String,JsonObject>>() {
@@ -285,13 +278,12 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * @param usersIds users identifiers
 	 */
 	private void prepareCleanCategories(final String [] usersIds) {
-		DBObject deletedUsers = new BasicDBObject();
 		// users currently deleted
-		deletedUsers.put("owner.userId", new BasicDBObject("$in", usersIds));
+		Bson deletedUsers = eq("owner.userId", in("$in", usersIds));
 		// users who have already been deleted
-		DBObject ownerIsDeleted = new BasicDBObject("owner.deleted", true);
+		Bson ownerIsDeleted = eq("owner.deleted", true);
 		// no manager found
-		JsonObject matcher = MongoQueryBuilder.build(QueryBuilder.start("shared." + MANAGE_RIGHT_ACTION).notEquals(true).or(deletedUsers, ownerIsDeleted));
+		JsonObject matcher = MongoQueryBuilder.build(and(ne("shared." + MANAGE_RIGHT_ACTION, true), or(deletedUsers, ownerIsDeleted)));
 		// return only categories identifiers
 		JsonObject projection = new JsonObject().put("_id", 1);
 
@@ -324,7 +316,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * @param categoriesIds categories identifiers
 	 */
 	private void cleanCategories(final String [] usersIds, final String [] categoriesIds) {
-		JsonObject matcher = MongoQueryBuilder.build(QueryBuilder.start("_id").in(categoriesIds));
+		JsonObject matcher = MongoQueryBuilder.build(in("_id", categoriesIds));
 
 		mongo.delete(CATEGORY_COLLECTION, matcher, MongoDbResult.validActionResultHandler(new Handler<Either<String,JsonObject>>() {
 			@Override
@@ -345,7 +337,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * @param categoriesIds categories identifiers
 	 */
 	private void cleanSubjects(final String [] categoriesIds) {
-		JsonObject matcher = MongoQueryBuilder.build(QueryBuilder.start("category").in(categoriesIds));
+		JsonObject matcher = MongoQueryBuilder.build(in("category", categoriesIds));
 
 		mongo.delete(SUBJECT_COLLECTION, matcher, MongoDbResult.validActionResultHandler(new Handler<Either<String,JsonObject>>() {
 			@Override
@@ -364,7 +356,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * @param usersIds users identifiers
 	 */
 	private void tagUsersAsDeleted(final String[] usersIds) {
-		final JsonObject criteria = MongoQueryBuilder.build(QueryBuilder.start("owner.userId").in(usersIds));
+		final JsonObject criteria = MongoQueryBuilder.build(in("owner.userId", usersIds));
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		modifier.set("owner.deleted", true);
 

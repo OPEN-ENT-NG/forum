@@ -27,6 +27,7 @@ import java.util.List;
 
 import net.atos.entng.forum.services.MessageService;
 
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.entcore.common.service.VisibilityFilter;
 import org.entcore.common.user.UserInfos;
@@ -38,12 +39,12 @@ import io.vertx.core.json.JsonObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.mongodb.MongoUpdateBuilder;
 import fr.wseduc.webutils.Either;
+import static com.mongodb.client.model.Filters.*;
 
 public class MongoDbMessageService extends AbstractService implements MessageService {
 
@@ -54,8 +55,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 	@Override
 	public void list(final String categoryId, final String subjectId, final UserInfos user, final Handler<Either<String, JsonArray>> handler) {
 		// Prepare Query
-		QueryBuilder query = QueryBuilder.start("_id").is(subjectId)
-				.put("category").is(categoryId);
+		Bson query = and(eq("_id", subjectId), eq("category", categoryId));
 
 		// Projection
 		JsonObject projection = new JsonObject();
@@ -91,7 +91,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 		// Prepare Message object
 		final ObjectId newId = new ObjectId();
 		JsonObject now = MongoDb.now();
-		body.put("_id", newId.toStringMongod())
+		body.put("_id", newId.toString())
 			.put("owner", new JsonObject()
 				.put("userId", user.getUserId())
 				.put("displayName", user.getUsername()))
@@ -99,8 +99,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 			.put("created", now).put("modified", now);
 
 		// Prepare Query
-		QueryBuilder query = QueryBuilder.start("_id").is(subjectId);
-		query.put("category").is(categoryId);
+		Bson query = and(eq("_id", subjectId), eq("category", categoryId));
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		modifier.push("messages", body);
 		modifier.inc("nbMessages", 1);
@@ -115,7 +114,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 						if (event.right().getValue().getInteger("number").intValue() == 1) {
 							// Respond with created message Id
 							JsonObject created = new JsonObject();
-							created.put("_id", newId.toStringMongod());
+							created.put("_id", newId.toString());
 							handler.handle(new Either.Right<String, JsonObject>(created));
 						}
 						else {
@@ -136,9 +135,9 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 	@Override
 	public void retrieve(final String categoryId, final String subjectId, final String messageId, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
 		// Prepare Query
-		QueryBuilder query = QueryBuilder.start("_id").is(subjectId)
-				.put("category").is(categoryId)
-				.put("messages").elemMatch(new BasicDBObject("_id", messageId));
+		Bson query = and(eq("_id", subjectId),
+				eq("category", categoryId),
+				elemMatch("messages", new BasicDBObject("_id", messageId)));
 
 		// Projection
 		JsonObject idMatch = new JsonObject();
@@ -178,9 +177,9 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 	@Override
 	public void update(final String categoryId, final String subjectId, final String messageId, final JsonObject body, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
 		// Prepare Query
-		QueryBuilder query = QueryBuilder.start("_id").is(subjectId)
-				.put("category").is(categoryId)
-				.put("messages").elemMatch(new BasicDBObject("_id", messageId));
+		Bson query = and(eq("_id", subjectId),
+				eq("category", categoryId),
+				elemMatch("messages", new BasicDBObject("_id", messageId)));
 
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		// Prepare Message object update
@@ -203,9 +202,9 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 	@Override
 	public void delete(final String categoryId, final String subjectId, final String messageId, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
 		// Prepare Query
-		QueryBuilder query = QueryBuilder.start("_id").is(subjectId)
-				.put("category").is(categoryId)
-				.put("messages").elemMatch(new BasicDBObject("_id", messageId));
+		Bson query = and(eq("_id", subjectId),
+				eq("category", categoryId),
+				elemMatch("messages", new BasicDBObject("_id", messageId)));
 
 		MongoUpdateBuilder modifier = new MongoUpdateBuilder();
 		// Prepare Message delete
@@ -222,8 +221,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 	@Override
 	public void checkIsSharedOrMine(final String categoryId, final String subjectId, final String messageId, final UserInfos user, final String sharedMethod, final Handler<Boolean> handler) {
 		// Prepare Category Query
-		final QueryBuilder methodSharedQuery = QueryBuilder.start();
-		prepareIsSharedMethodQuery(methodSharedQuery, user, categoryId, sharedMethod);
+		final Bson methodSharedQuery = prepareIsSharedMethodQuery(user, categoryId, sharedMethod);
 
 		// Check Category Sharing with method
 		executeCountQuery(categories_collection, MongoQueryBuilder.build(methodSharedQuery), 1, new Handler<Boolean>() {
@@ -234,8 +232,7 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 				}
 				else {
 					// Prepare Category Query
-						final QueryBuilder anySharedQuery = QueryBuilder.start();
-					prepareIsSharedAnyQuery(anySharedQuery, user, categoryId);
+						final Bson anySharedQuery = prepareIsSharedAnyQuery(user, categoryId);
 
 					// Check Category Sharing with any method
 					executeCountQuery(categories_collection, MongoQueryBuilder.build(anySharedQuery), 1, new Handler<Boolean>() {
@@ -243,16 +240,14 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 						public void handle(Boolean event) {
 							if (event) {
 								// Prepare Subject and Message query
-								QueryBuilder query = QueryBuilder.start("_id").is(subjectId)
-										.put("category").is(categoryId);
+								Bson query = and(eq("_id", subjectId),eq("category", categoryId));
 
-								DBObject messageMatch = new BasicDBObject();
-								messageMatch.put("_id", messageId);
-								messageMatch.put("owner.userId", user.getUserId());
-								query.put("messages").elemMatch(messageMatch);
+								Bson messageMatch = and(
+										eq("_id", messageId),
+										eq("owner.userId", user.getUserId()));
 
 								// Check Message is mine
-								executeCountQuery(subjects_collection, MongoQueryBuilder.build(query), 1, handler);
+								executeCountQuery(subjects_collection, MongoQueryBuilder.build(and(query, elemMatch("messages", messageMatch))), 1, handler);
 							}
 							else {
 								handler.handle(false);
@@ -264,43 +259,39 @@ public class MongoDbMessageService extends AbstractService implements MessageSer
 		});
 	}
 
-	protected void prepareIsSharedMethodQuery(final QueryBuilder query, final UserInfos user, final String threadId, final String sharedMethod) {
+	protected Bson prepareIsSharedMethodQuery(final UserInfos user, final String threadId, final String sharedMethod) {
 		// ThreadId
-		query.put("_id").is(threadId);
+		Bson threadIdFilter = eq("_id", threadId);
 
 		// Permissions
-		List<DBObject> groups = new ArrayList<>();
-		groups.add(QueryBuilder.start("userId").is(user.getUserId())
-				.put(sharedMethod).is(true).get());
+		List<Bson> groups = new ArrayList<>();
+		groups.add(and(eq("userId", user.getUserId()),
+				eq(sharedMethod, true)));
 		for (String gpId: user.getProfilGroupsIds()) {
-			groups.add(QueryBuilder.start("groupId").is(gpId)
-					.put(sharedMethod).is(true).get());
+			groups.add(and(eq("groupId", gpId), eq(sharedMethod, true)));
 		}
-		query.or(
-				QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
-				QueryBuilder.start("visibility").is(VisibilityFilter.PUBLIC.name()).get(),
-				QueryBuilder.start("visibility").is(VisibilityFilter.PROTECTED.name()).get(),
-				QueryBuilder.start("shared").elemMatch(
-						new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
-		);
+		return and(threadIdFilter, or(
+				eq("owner.userId", user.getUserId()),
+				eq("visibility", VisibilityFilter.PUBLIC.name()),
+				eq("visibility", VisibilityFilter.PROTECTED.name()),
+				elemMatch("shared", or(groups))));
 	}
 
-	protected void prepareIsSharedAnyQuery(final QueryBuilder query, final UserInfos user, final String threadId) {
+	protected Bson prepareIsSharedAnyQuery(final UserInfos user, final String threadId) {
 		// ThreadId
-		query.put("_id").is(threadId);
+		Bson threadIdFilter = eq("_id", threadId);
 
 		// Permissions
-		List<DBObject> groups = new ArrayList<>();
-		groups.add(QueryBuilder.start("userId").is(user.getUserId()).get());
+		List<Bson> groups = new ArrayList<>();
+		groups.add(eq("userId", user.getUserId()));
 		for (String gpId: user.getProfilGroupsIds()) {
-			groups.add(QueryBuilder.start("groupId").is(gpId).get());
+			groups.add(eq("groupId", gpId));
 		}
-		query.or(
-				QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
-				QueryBuilder.start("visibility").is(VisibilityFilter.PUBLIC.name()).get(),
-				QueryBuilder.start("visibility").is(VisibilityFilter.PROTECTED.name()).get(),
-				QueryBuilder.start("shared").elemMatch(
-						new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()).get()
+		return and(threadIdFilter, or(
+				eq("owner.userId", user.getUserId()),
+				eq("visibility", VisibilityFilter.PUBLIC.name()),
+				eq("visibility", VisibilityFilter.PROTECTED.name()),
+				elemMatch("shared", or(groups)))
 		);
 	}
 
