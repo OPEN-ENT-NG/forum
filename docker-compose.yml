@@ -13,4 +13,7 @@ services:
     volumes:
       - ./:/home/node/app
       - ~/.npm:/.npm
-      - ../recette:/home/node/recette # TODO : rendre générique pour appliquer à tous les springboards
+      - ~/.npmrc:/home/node/.npmrc
+      - ~/.bowerrc:/home/node/.bowerrc
+      - ~/.gitconfig:/home/node/.gitconfig
+      - ../recette:/home/node/recette # TODO : rendre générique pour appliquer à tous les springboards 
