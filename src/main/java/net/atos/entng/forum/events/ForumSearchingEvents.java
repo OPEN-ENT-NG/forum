@@ -20,27 +20,27 @@
 package net.atos.entng.forum.events;
 
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.Either.Right;
 import fr.wseduc.webutils.I18n;
-import net.atos.entng.forum.Forum;
-import org.entcore.common.search.SearchingEvents;
-import org.entcore.common.service.VisibilityFilter;
-import org.entcore.common.service.impl.MongoDbSearchService;
-import org.entcore.common.utils.StringUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import net.atos.entng.forum.Forum;
+import org.bson.conversions.Bson;
+import org.entcore.common.search.SearchingEvents;
+import org.entcore.common.service.VisibilityFilter;
+import org.entcore.common.service.impl.MongoDbSearchService;
+import org.entcore.common.utils.StringUtils;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
+import static com.mongodb.client.model.Filters.*;
 import static org.entcore.common.mongodb.MongoDbResult.validResults;
 import static org.entcore.common.mongodb.MongoDbResult.validResultsHandler;
 
@@ -60,19 +60,17 @@ public class ForumSearchingEvents implements SearchingEvents {
 		if (appFilters.contains(ForumSearchingEvents.class.getSimpleName())) {
 
 			final List<String> groupIdsLst = groupIds.getList();
-			final List<DBObject> groups = new ArrayList<DBObject>();
-			groups.add(QueryBuilder.start("userId").is(userId).get());
+			final List<Bson> groups = new ArrayList<>();
+			groups.add(eq("userId", userId));
 			for (String gpId: groupIdsLst) {
-				groups.add(QueryBuilder.start("groupId").is(gpId).get());
+				groups.add(eq("groupId", gpId));
 			}
 
-			final QueryBuilder rightsQuery = new QueryBuilder().or(
-					QueryBuilder.start("visibility").is(VisibilityFilter.PUBLIC.name()).get(),
-					QueryBuilder.start("visibility").is(VisibilityFilter.PROTECTED.name()).get(),
-					QueryBuilder.start("owner.userId").is(userId).get(),
-					QueryBuilder.start("shared").elemMatch(
-							new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()
-					).get());
+			final Bson rightsQuery = or(
+					eq("visibility", VisibilityFilter.PUBLIC.name()),
+					eq("visibility", VisibilityFilter.PROTECTED.name()),
+					eq("owner.userId", userId),
+					elemMatch("shared", or(groups)));
 
 			JsonObject sort = new JsonObject().put("modified", -1);
 			final JsonObject projection = new JsonObject();
@@ -120,12 +118,11 @@ public class ForumSearchingEvents implements SearchingEvents {
 	private void searchSubject(int page, int limit, List<String> searchWords, final Map<String,String> mapIdName, Handler<Either<String, JsonArray>> handler) {
 		final int skip = (0 == page) ? -1 : page * limit;
 
-		final QueryBuilder worldsQuery = new QueryBuilder();
-		worldsQuery.text(MongoDbSearchService.textSearchedComposition(searchWords));
+		final Bson worldsQuery = text(MongoDbSearchService.textSearchedComposition(searchWords));
 
-		final QueryBuilder categoryQuery = new QueryBuilder().start("category").in(mapIdName.keySet());
+		final Bson categoryQuery = in("category", mapIdName.keySet());
 
-		final QueryBuilder query = new QueryBuilder().and(worldsQuery.get(), categoryQuery.get());
+		final Bson query = and(worldsQuery, categoryQuery);
 
 		JsonObject sort = new JsonObject().put("modified", -1);
 		final JsonObject projection = new JsonObject();

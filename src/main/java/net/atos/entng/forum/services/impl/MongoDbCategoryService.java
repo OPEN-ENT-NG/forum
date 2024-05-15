@@ -27,16 +27,17 @@ import java.util.List;
 
 import net.atos.entng.forum.services.CategoryService;
 
+import org.bson.conversions.Bson;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.webutils.Either;
+import static com.mongodb.client.model.Filters.*;
 
 public class MongoDbCategoryService extends AbstractService implements CategoryService {
 
@@ -46,20 +47,16 @@ public class MongoDbCategoryService extends AbstractService implements CategoryS
 
 	@Override
 	public void list(UserInfos user, Handler<Either<String, JsonArray>> handler) {
-		// Start
-		QueryBuilder query = QueryBuilder.start();
 
 		// Permissions Filter
-		List<DBObject> groups = new ArrayList<>();
-		groups.add(QueryBuilder.start("userId").is(user.getUserId()).get());
+		List<Bson> groups = new ArrayList<>();
+		groups.add(eq("userId", user.getUserId()));
 		for (String gpId: user.getProfilGroupsIds()) {
-			groups.add(QueryBuilder.start("groupId").is(gpId).get());
+			groups.add(eq("groupId", gpId));
 		}
-		query.or(
-			QueryBuilder.start("owner.userId").is(user.getUserId()).get(),
-			QueryBuilder.start("shared").elemMatch(
-					new QueryBuilder().or(groups.toArray(new DBObject[groups.size()])).get()
-			).get());
+		Bson query = or(
+			eq("owner.userId", user.getUserId()),
+			elemMatch("shared", or(groups)));
 
 		JsonObject sort = new JsonObject().put("modified", -1);
 		mongo.find(categories_collection, MongoQueryBuilder.build(query), sort, null, validResultsHandler(handler));
@@ -68,21 +65,21 @@ public class MongoDbCategoryService extends AbstractService implements CategoryS
 	@Override
 	public void retrieve(String id, UserInfos user, Handler<Either<String, JsonObject>> handler) {
 		// Query
-		QueryBuilder builder = QueryBuilder.start("_id").is(id);
+		Bson builder = eq("_id", id);
 		mongo.findOne(categories_collection,  MongoQueryBuilder.build(builder), null, validResultHandler(handler));
 	}
 
 	@Override
 	public void delete(String id, UserInfos user, Handler<Either<String, JsonObject>> handler) {
 		// Delete the category
-		QueryBuilder builder = QueryBuilder.start("_id").is(id);
+		Bson builder = eq("_id", id);
 		mongo.delete(categories_collection,  MongoQueryBuilder.build(builder), validResultHandler(handler));
 	}
 
 	@Override
 	public void deleteSubjects(String id, UserInfos user, Handler<Either<String, JsonObject>> handler) {
 		// Delete all subjects of the category
-		QueryBuilder query = QueryBuilder.start("category").is(id);
+		Bson query = eq("category", id);
 		mongo.delete(subjects_collection, MongoQueryBuilder.build(query), validResultHandler(handler));
 	}
 
