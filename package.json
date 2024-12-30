@@ -1,6 +1,6 @@
 {
   "name": "forum",
-  "version": "0.14.0",
+  "version": "1.13.5",
   "description": "forum-building tool for ENT Core.",
   "main": "gulpfile.js",
   "dependencies": {
