@@ -19,8 +19,6 @@
 
 package net.atos.entng.forum.events;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.mongodb.MongoQueryBuilder;
 import fr.wseduc.mongodb.MongoUpdateBuilder;
@@ -36,6 +34,7 @@ import net.atos.entng.forum.Forum;
 import org.bson.conversions.Bson;
 import org.entcore.common.mongodb.MongoDbResult;
 import org.entcore.common.service.impl.MongoDbRepositoryEvents;
+import org.entcore.common.user.ExportResourceResult;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -60,7 +59,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 
 	@Override
 	public void exportResources(JsonArray resourcesIds, boolean exportDocuments, boolean exportSharedResources, String exportId, String userId,
-								JsonArray g, String exportPath, String locale, String host, Handler<Boolean> handler)
+								JsonArray g, String exportPath, String locale, String host, Handler<ExportResourceResult> handler)
 	{
 			Bson findByOwner = eq("owner.userId", userId);
 
@@ -130,12 +129,12 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 													{
 														if (bool)
 														{
-															exportFiles(results, path, new HashSet<String>(), exported, handler);
+															exportFiles(results, path, new HashSet<String>(), exported, e -> handler.handle(new ExportResourceResult(e, path)));
 														}
 														else
 														{
 															// Should never happen, export doesn't fail if docs export fail.
-															handler.handle(exported.get());
+															handler.handle(ExportResourceResult.KO);
 														}
 													}
 												};
@@ -147,7 +146,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 											}
 											else
 											{
-												handler.handle(exported.get());
+												handler.handle(ExportResourceResult.KO);
 											}
 										}
 									});
@@ -155,7 +154,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 								else
 								{
 									log.error(title + " : Could not proceed query " + query2.encode(), event2.body().getString("message"));
-									handler.handle(exported.get());
+									handler.handle(ExportResourceResult.KO);
 								}
 							}
 						});
@@ -163,7 +162,7 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 					else
 					{
 						log.error(title + " : Could not proceed query " + query.encode(), event.body().getString("message"));
-						handler.handle(exported.get());
+						handler.handle(ExportResourceResult.KO);
 					}
 				}
 			});
