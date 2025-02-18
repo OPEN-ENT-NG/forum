@@ -60,7 +60,6 @@ buildNode () {
     exit -1
   fi
 
-  if [ "$BRANCH_NAME" = 'master' ]; then
       echo "[buildNode] Use entcore version from package.json ($BRANCH_NAME)"
       case `uname -s` in
         MINGW*)
@@ -69,16 +68,6 @@ buildNode () {
         *)
           docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm update entcore && node_modules/gulp/bin/gulp.js build"
       esac
-  else
-      echo "[buildNode] Use entcore tag $BRANCH_NAME"
-      case `uname -s` in
-        MINGW*)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install --no-bin-links && npm rm --no-save entcore && npm install --no-save entcore@$BRANCH_NAME && node_modules/gulp/bin/gulp.js build"
-          ;;
-        *)
-          docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && npm rm --no-save entcore && npm install --no-save entcore@$BRANCH_NAME && node_modules/gulp/bin/gulp.js build"
-      esac
-  fi
 }
 
 buildGradle () {
