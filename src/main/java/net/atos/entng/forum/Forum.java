@@ -43,7 +43,14 @@ public class Forum extends BaseServer {
 
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
-		super.start(startPromise);
+		final Promise<Void> promise = Promise.promise();
+		super.start(promise);
+		promise.future()
+			.onSuccess(x -> init(startPromise))
+			.onFailure(ex -> log.error("Error when start Forum server super classes", ex));
+	}
+
+	public void init(Promise<Void> startPromise) {
 		// Subscribe to events published for transition
 		setRepositoryEvents(new ForumRepositoryEvents(vertx));
 
