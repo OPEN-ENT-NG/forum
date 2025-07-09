@@ -1,13 +1,13 @@
 {
   "name": "forum",
-  "version": "2.0.8",
+  "version": "2.0.8-dev.0",
   "description": "forum-building tool for ENT Core.",
   "main": "gulpfile.js",
   "dependencies": {
     "@types/core-js": "0.9.42",
     "axios": "0.16.2",
     "core-js": "2.4.1",
-    "entcore": "4.8.13",
+    "entcore": "dev",
     "entcore-toolkit": "^1.0.1",
     "gulp": "3.9.1",
     "gulp-clean": "^0.3.2",
