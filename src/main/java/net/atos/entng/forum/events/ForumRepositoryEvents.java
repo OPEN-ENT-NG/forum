@@ -277,9 +277,9 @@ public class ForumRepositoryEvents extends MongoDbRepositoryEvents {
 	 * if OK, Call cleanCategories()
 	 * @param usersIds users identifiers
 	 */
-	private void prepareCleanCategories(final String [] usersIds) {
+	private void prepareCleanCategories(final String[] usersIds) {
 		// users currently deleted
-		Bson deletedUsers = eq("owner.userId", in("$in", usersIds));
+		Bson deletedUsers = in("owner.userId", usersIds);
 		// users who have already been deleted
 		Bson ownerIsDeleted = eq("owner.deleted", true);
 		// no manager found
