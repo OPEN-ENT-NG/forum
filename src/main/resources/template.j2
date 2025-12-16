@@ -1,0 +1,21 @@
+{
+  "name": "net.atos~forum",
+  "config": {
+    "main": "net.atos.entng.forum.Forum",
+    "port": 8024,
+    "csrf-token": {{ csrfToken | default('true') }},
+    "app-name": "Forum",
+    "app-address": "/forum",
+    "app-icon": "forum-large",
+    "app-type" : "END_USER",
+    "host": "https://{{ host }}",
+    "ssl": true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "https://{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port": 8012,
+    "mode": "prod",
+    "entcore.port": 8009
+  }
+}
