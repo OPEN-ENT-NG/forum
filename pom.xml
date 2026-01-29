@@ -30,6 +30,7 @@
 
     <properties>
         <entcore.version>6.13.0</entcore.version>
+        <modMongoVersion>4.1.0</modMongoVersion>
     </properties>
 
     <dependencies>
