@@ -16,6 +16,12 @@
     "integration-mode": "{{ integration_mode|default('HTTP') }}",
     "app-registry.port": 8012,
     "mode": "prod",
-    "entcore.port": 8009
+    "entcore.port": 8009,
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe",
+      "org.entcore.common.http.health.RedisProbe",
+      "fr.wseduc.webutils.metrics.EventBusProbe"
+    ]
   }
 }
