@@ -112,9 +112,9 @@ watch () {
   docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js watch --springboard=/home/node/$SPRINGBOARD"
 }
 
-image() {
-  ./edifice image --project-type=entcore $EDIFICE_CLI_DEBUG_OPTION --rebuild=false
-}
+if [ ! -e .env ]; then
+  init
+fi
 
 for param in "$@"
 do
@@ -142,9 +142,6 @@ do
       ;;
     publish)
       publish
-      ;;
-    image)
-      image
       ;;
     *)
       echo "Invalid argument : $param"
