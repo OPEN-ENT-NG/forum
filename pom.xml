@@ -26,7 +26,6 @@
   </repositories>
   <properties>
     <entcore.version>6.14-SNAPSHOT</entcore.version>
-    <entcore-libs.version>6.14-SNAPSHOT</entcore-libs.version>
     <modMongoVersion>4.1-SNAPSHOT</modMongoVersion>
     <entCoreLibsVersion>6.14-SNAPSHOT</entCoreLibsVersion>
     <entCoreVersion>6.14-SNAPSHOT</entCoreVersion>
@@ -44,12 +43,6 @@
       <artifactId>jackson-databind</artifactId>
       <version>${jacksonDatabindVersion}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.entcore</groupId>
-      <artifactId>common</artifactId>
-      <version>${entcore-libs.version}</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.entcore</groupId>
@@ -80,7 +73,7 @@
     <dependency>
       <groupId>org.entcore</groupId>
       <artifactId>session</artifactId>
-      <version>${entcore-libs.version}</version>
+      <version>${entCoreLibsVersion}</version>
       <scope>runtime</scope>
       <classifier>fat</classifier>
     </dependency>
