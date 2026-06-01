@@ -25,10 +25,10 @@
     </repository>
   </repositories>
   <properties>
-    <entcore.version>6.15-SNAPSHOT</entcore.version>
+    <entcore.version>6.15-develop-b2school-SNAPSHOT</entcore.version>
     <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
     <entCoreLibsVersion>6.15-SNAPSHOT</entCoreLibsVersion>
-    <entCoreVersion>6.15-SNAPSHOT</entCoreVersion>
+    <entCoreVersion>6.15-develop-b2school-SNAPSHOT</entCoreVersion>
     <modJsonSchemaValidatorVersion>2.2-SNAPSHOT</modJsonSchemaValidatorVersion>
   </properties>
   <dependencies>
