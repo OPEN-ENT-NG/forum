@@ -25,10 +25,10 @@
     </repository>
   </repositories>
   <properties>
-    <entcore.version>6.16-develop-enabling-SNAPSHOT</entcore.version>
+    <entcore.version>6.16-SNAPSHOT</entcore.version>
     <modMongoVersion>4.2-SNAPSHOT</modMongoVersion>
     <entCoreLibsVersion>6.16-SNAPSHOT</entCoreLibsVersion>
-    <entCoreVersion>6.16-develop-enabling-SNAPSHOT</entCoreVersion>
+    <entCoreVersion>6.16-SNAPSHOT</entCoreVersion>
     <modJsonSchemaValidatorVersion>2.2-SNAPSHOT</modJsonSchemaValidatorVersion>
   </properties>
   <dependencies>
