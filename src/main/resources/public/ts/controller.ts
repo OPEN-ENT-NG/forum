@@ -1,7 +1,7 @@
 import {routes, model, Behaviours, ng, template, moment, $, _, skin, trackingService} from 'entcore';
 import {ForumControllerScope} from "./commons";
 import * as jQuery from 'jquery';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export let forumController = ng.controller('ForumController', ['$scope', 'model', 'route',
 	function ($scope:ForumControllerScope, model, route){
