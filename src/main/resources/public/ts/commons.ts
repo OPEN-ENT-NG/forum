@@ -1,4 +1,4 @@
-import { AxiosPromise } from 'axios';
+import { HttpPromise } from 'entcore-toolkit';
 import {routes, model, Behaviours, ng, template, moment, $, _, skin, EditTrackingEvent} from 'entcore';
 
 export interface ForumMessage{
@@ -76,7 +76,7 @@ export interface ForumControllerScope{
 	subject: ForumSubject;
 	subjects: ForumSubjects;
 	getCategory: any;
-	getSubjects: AxiosPromise;
+	getSubjects: HttpPromise;
 	printed:boolean;
 	messages: any;
     showAddSubjectHelp: any;
